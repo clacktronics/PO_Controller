@@ -1,5 +1,16 @@
 from Tkinter import *
 from math import sin, cos, pi
+from ENT_Control import EntTec
+from Arduino_read import Arduino
+from IRCAM import IRCAM
+import threading
+from time import sleep
+
+
+#========================================================================
+# GLOBAL VARS
+#========================================================================
+
 channels = {}
 arduinoMap = []
 channelColours = ['Red','Green','Blue','White']
@@ -15,10 +26,10 @@ for arduino in range(64):
 		arduinoMap.append(0)
 	else:
 		arduinoMap.append(1)
-print arduinoMap
 
-def printfoo():
-	print "foo"
+#========================================================================
+# GUI CLASSES
+#========================================================================
 
 class DMXaddressUtil():
 
@@ -80,9 +91,18 @@ class DMXaddressUtil():
 		
 		
 		applyButton = Button(self.frame, text="Apply",command=self.applyUpdate)
+		StartArduino = Button(self.frame, text="Start Arduino",command=HaroonThread.start)
+		StartIrcam = Button(self.frame, text="Start IRCAM",command=IrcamThread.start)
+		KillArduino = Button(self.frame, text="Kill Arduino",command=HaroonThread.stop)
+		KillIrcam = Button(self.frame, text="Kill IRCAM",command=IrcamThread.stop)
 
 		sel.grid(row=self.numberColours+2,column=1,columnspan=2)
 		applyButton.grid(row=self.numberColours+2,column=3,columnspan=2)
+		StartArduino.grid(row=self.numberColours+2,column=6,columnspan=2)
+		StartIrcam.grid(row=self.numberColours+2,column=10,columnspan=2)
+		KillArduino.grid(row=self.numberColours+2,column=8,columnspan=2)
+		KillIrcam.grid(row=self.numberColours+2,column=12,columnspan=2)
+
 
 	def applyUpdate(self):
 		print "apply" 
@@ -138,23 +158,96 @@ class lightCanvas:
 					DMXutil.render(addRange,light)
 
 
+#========================================================================
+# CONTROL CLASSES
+#========================================================================
+
+
+class ThreadedMapper(threading.Thread):
+
+	def __init__(self,input_device,output_device):
+		self.input_device = input_device
+		self.output_device = output_device
+		self.playThread = False
+		self.thread = threading.Thread(target=self.action)
+		self.thread.setDaemon(True)
+		self.thread.start()
+		
+		print input_device.type
+
+	def action(self):
+		while True:
+			if self.input_device.type == "Arduino":
+				if self.playThread:
+					print "Playing Arduino"
+					self.input_device.cue()
+					while True:
+						output =  self.input_device.readSequence()
+						self.output_device.senddmx(OperaPins,output)
+						if not self.playThread:
+							print "Stopping Arduino"
+							self.input_device.stop()
+							self.output_device.all(0)
+							break
+					
+
+			elif self.input_device.type == "IRCAM":
+				if self.playThread:
+					print "Listening to IRCAM"
+					while True:
+						message = self.input_device.getMessage()
+						message = self.rangeMapper(message, 0, 360, 0, 63)
+						print message
+						messages = [0] * 64
+						messages[message] = 3
+						self.output_device.senddmx(range(1,65),messages)
+						if not self.playThread:
+							print "Stopping IRCAM"
+							self.output_device.all(0)
+							break
+			sleep(0.1)
+
+	def rangeMapper(self,x, in_min, in_max, out_min, out_max):
+		return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+
+	def start(self):
+		self.playThread = True
+
+	def stop(self):
+		print "stop"
+		self.playThread = False
 
 
 
-master = Tk()
-master.configure(background='#E8E9E8')
-master.title('Paris Opera - Haroon Mirza')
+#========================================================================
+# MAIN PROGRAM
+#========================================================================
 
 
-DMXaddressesFrame = Frame(padx=10,pady=10)
-DMXaddressesFrame.configure(background='#E8E9E8')
-DMXutil = DMXaddressUtil(DMXaddressesFrame,channelColours)
-DMXaddressesFrame.grid(row=1,column=1)
+if __name__ == "__main__":
 
-OperaCanvas = Canvas(master,bg='#E8E9E8',highlightbackground='#E8E9E8', width=600, height=500)
-lightCan = lightCanvas(OperaCanvas)
-lightCan.render()
-master.bind("<Button-1>", lightCan.lampSelect)
+	master = Tk()
+	master.configure(background='#E8E9E8')
+	master.title('Paris Opera - Haroon Mirza')
+
+	OperaPins = range(1,64,8)
+	EntTec = EntTec('/dev/tty.usbserial-EN172718')
+	Arduino = Arduino('/dev/tty.usbmodemfd131',250000)
+	IRCAM = IRCAM('localhost',7003)
+
+	HaroonThread = ThreadedMapper(Arduino,EntTec)
+	IrcamThread = ThreadedMapper(IRCAM,EntTec)
+
+	DMXaddressesFrame = Frame(padx=10,pady=10)
+	DMXaddressesFrame.configure(background='#E8E9E8')
+	DMXutil = DMXaddressUtil(DMXaddressesFrame,channelColours)
+	DMXaddressesFrame.grid(row=1,column=1)
+
+	OperaCanvas = Canvas(master,bg='#E8E9E8',highlightbackground='#E8E9E8', width=600, height=500)
+	lightCan = lightCanvas(OperaCanvas)
+	lightCan.render()
+	master.bind("<Button-1>", lightCan.lampSelect)
+	
 
 
-master.mainloop()
+	master.mainloop()

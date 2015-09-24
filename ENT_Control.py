@@ -2,10 +2,11 @@
 import serial
 from Arduino_read import Arduino
 import sys
+from time import sleep
 
 class EntTec:
 
-	def __init__(self,port):
+	def __init__(self,port,dmxChannels):
 		#char 126 is 7E in hex. It's used to start all DMX512 commands
 		self.DMXOPEN=chr(126)
 		#char 231 is E7 in hex. It's used to close all DMX512 commands
@@ -37,6 +38,9 @@ class EntTec:
 		#mentioned spacer byte following the header. This makes the array math more obvious
 		self.dmxDataList=[chr(0)]*513
 
+		self.dmxChannels = dmxChannels
+		self.DMXValues = {'Red':255,'Green':254,'Blue':253,'White':252}
+
 		#senddmx accepts the 513 byte long data string to keep the state of all the channels
 		# the channel number and the value for that channel
 		#senddmx writes to the serial port then returns the modified 513 byte array
@@ -45,7 +49,7 @@ class EntTec:
 	        # because the spacer bit is [0], the channel number is the array item number
 	        # set the channel number to the proper value
 	        for chanN,chan in enumerate(chans):
-	        	outputDMX = int(intensity[chanN]) * 85
+	        	outputDMX = int(intensity[chanN])
 	       		self.dmxDataList[chan]=chr(outputDMX)
 	        # join turns the array data into a string we can send down the DMX
 	        sdata=''.join(self.dmxDataList)
@@ -53,18 +57,45 @@ class EntTec:
 	        self.EntTec.write(self.DMXOPEN+self.DMXINTENSITY+sdata+self.DMXCLOSE)
 	        # return the data with the new value in place
 
+	def RGBcans(self, chans):
+		channels_to_write = []
+		values_to_write = []
+		for chan in chans:
+			channels_to_write.append(self.dmxChannels['Red'][chan])
+			values_to_write.append(self.DMXValues['Red'])
+			channels_to_write.append(self.dmxChannels['Green'][chan])
+			values_to_write.append(self.DMXValues['Green'])
+			channels_to_write.append(self.dmxChannels['Blue'][chan])
+			values_to_write.append(self.DMXValues['Blue'])
+			channels_to_write.append(self.dmxChannels['White'][chan])
+			values_to_write.append(self.DMXValues['White'])
+		senddmx(channels_to_write, values_to_write)
+
+
 	def all(self,n):
 		self.senddmx(range(1,65),[n]*64)
+		# Theeseeese are the LEDs for 8
+		#51,35,17,1
+	    #9,25,43,59
 
 
 
 if __name__ == "__main__":
-	OperaPins = range(1,64,8)
-	print OperaPins
-	EntTec = EntTec('/dev/tty.usbserial-EN172718')
-	Arduino = Arduino('/dev/tty.usbmodemfd131',250000)
-	Arduino.cue()
-	while True:
-		output = Arduino.readSequence()
-		EntTec.senddmx(OperaPins,output)
+
+	channelColours = ['Red','Green','Blue','White']
+	numberColours = len(channelColours)
+	defaultMap = {}
+	for channelN,channel in enumerate(channelColours):
+		defaultMap[channel] = range(channelN,64*numberColours,numberColours)
+	DMXValues = [255,255,255,255]
+
+	EntTec = EntTec('/dev/tty.usbserial-EN172718',defaultMap)
+
+
+	print EntTec.RGBcans([1,4,8])
+		 EntTec.senddmx(range(1,9),[250]*8)
+		 sleep(1)
+		 EntTec.senddmx(range(1,9),[0]*8)
+		 sleep(1)
+	
 

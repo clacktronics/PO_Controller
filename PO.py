@@ -5,7 +5,7 @@ from Arduino_read import Arduino
 from IRCAM import IRCAM
 import threading
 from time import sleep
-
+import os, sys
 
 #========================================================================
 # GLOBAL VARS
@@ -20,12 +20,13 @@ numberColours = len(channelColours)
 defaultMap = {}
 for channelN,channel in enumerate(channelColours):
 	defaultMap[channel] = range(channelN,64*numberColours,numberColours)
-
 for arduino in range(64):
 	if arduino % 8:
 		arduinoMap.append(0)
 	else:
 		arduinoMap.append(1)
+
+print defaultMap
 
 #========================================================================
 # GUI CLASSES
@@ -122,12 +123,13 @@ class lightCanvas:
 		xoffset = 300
 		yoffset = 250
 
-		for light in range(64):
+		for light in range(lights ):
 			self.lightpositions[light] = {}
 			angle = light * increment 
 			
 			self.lightpositions[light]['x'] = xpos = round(xoffset + sin(angle) * 200,2)
 			self.lightpositions[light]['y'] = ypos = round(yoffset + cos(angle) * 200,2)
+
 			if light % 16 == 0:
 				lightSize = smallerLight + biggerLight
 				xpos -= biggerLight / 2
@@ -217,23 +219,119 @@ class ThreadedMapper(threading.Thread):
 		print "stop"
 		self.playThread = False
 
-
-
 #========================================================================
 # MAIN PROGRAM
 #========================================================================
 
-
 if __name__ == "__main__":
+
+
+	def initSetup(*args):
+
+		def quitProgram():
+			sys.exit('User Quit')
+
+		def cont():
+			global EnttecPort,ArduinoPort,IrcamIP,IrcamPort 
+			print PortSelectOut
+			EnttecPort = Out_device.get()
+			ArduinoPort = In_device.get()
+			IrcamIP = NetworkIP.get()
+			IrcamPort = NetworkPort.get()
+			print "Ports Submitted"
+			master2.destroy()
+			return EnttecPort,ArduinoPort,IrcamIP,IrcamPort
+
+
+
+		avPorts = [port for port in os.listdir('/dev/') if port[:4] == 'tty.' and port[:8] != 'tty.Blue' ]
+
+		if avPorts == None: 
+			avPorts = ['']
+				
+		master2 = Tk()
+		master2.title('Configuration')
+
+		for e in args:
+			Label(master2, text="%s Not working" % e,bg='#E8E9E8').pack()
+
+		# Serial Port Settings
+		Label(master2, text="Arduino Input",bg='#E8E9E8').pack()
+
+		In_device = StringVar(master2)
+		Input1 = avPorts[0]
+		for dev in avPorts:
+			if dev[:10] == "tty.usbmod":
+				In_device.set(dev)
+				break
+		
+		
+		PortSelectIn = OptionMenu(master2, In_device,*avPorts).pack()
+
+
+		Label(master2, text="DMX output device",bg='#E8E9E8').pack()
+
+		Out_device = StringVar(master2)
+		Out_device.set('tty.usbserial-EN172718')
+		PortSelectOut = OptionMenu(master2, Out_device,*avPorts).pack()
+
+		# Networking Settings
+		NetworkIP = StringVar(master2)
+		NetworkIP.set('localhost')
+
+		NetworkPort = IntVar(master2)
+		NetworkPort.set('7003')
+
+		Label(master2, text="Netowrk Receive Address",bg='#E8E9E8').pack()
+		NetowrkIP = Entry(master2,width=20,bd=1,textvariable=NetworkIP).pack()
+		Label(master2, text="Port",bg='#E8E9E8').pack()
+		Netowrkport = Entry(master2,width=6,bd=1,textvariable=NetworkPort).pack()
+
+		# Action Buttons
+		submitPorts = Button(master2, text="Continue",command=cont).pack()
+		cancel = Button(master2, text="Abort",command=quitProgram).pack()
+
+		master2.mainloop()
+
+
+	EnttecPort = ''
+	ArduinoPort = ''
+	IrcamIP = ''
+	IrcamPort = 0
+
+	initSetup()
+
+	portsWorking = False
+	while not portsWorking:
+			try:
+
+				EntTec = EntTec('/dev/' + EnttecPort,defaultMap)
+
+				Arduino = Arduino('/dev/' + ArduinoPort,250000)
+
+				IRCAM = IRCAM(IrcamIP,IrcamPort)
+
+				portsWorking = True
+			except Exception as e:
+				initSetup(e)
+
+
+
+
+	
+
+
 
 	master = Tk()
 	master.configure(background='#E8E9E8')
 	master.title('Paris Opera - Haroon Mirza')
 
+
 	OperaPins = range(1,64,8)
-	EntTec = EntTec('/dev/tty.usbserial-EN172718')
-	Arduino = Arduino('/dev/tty.usbmodemfd131',250000)
-	IRCAM = IRCAM('localhost',7003)
+
+
+	
+	
 
 	HaroonThread = ThreadedMapper(Arduino,EntTec)
 	IrcamThread = ThreadedMapper(IRCAM,EntTec)

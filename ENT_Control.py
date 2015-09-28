@@ -1,6 +1,7 @@
 
 import serial
 from Arduino_read import Arduino
+from IRCAM import IRCAM
 import sys
 from time import sleep
 
@@ -82,20 +83,51 @@ class EntTec:
 
 if __name__ == "__main__":
 
+
+	def rangeMapper(x, in_min, in_max, out_min, out_max):
+		return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+
+	messages = [0] * 64
+	mode = sys.argv[1]
 	channelColours = ['Red','Green','Blue','White']
 	numberColours = len(channelColours)
 	defaultMap = {}
 	for channelN,channel in enumerate(channelColours):
 		defaultMap[channel] = range(channelN,64*numberColours,numberColours)
 	DMXValues = [255,255,255,255]
-
+	
 	EntTec = EntTec('/dev/tty.usbserial-EN172718',defaultMap)
+	Arduino = Arduino('/dev/tty.usbmodemfd131',250000)
+
+	if mode == "mirza":
+		pins = [59, 51, 43, 35, 25, 17, 9, 1]
+		pins.reverse()
+		Arduino.cue()
+		while True:
+			sender = []
+			output =  Arduino.readSequence()
+			for i in output:
+				sender.append(int(i) * 83)
+			EntTec.senddmx(pins,sender)
+	elif mode == "boulez":
+		IRCAM = IRCAM('localhost',7003)
+		while True:
+			message = IRCAM.getMessage()
+			print message
+			message = rangeMapper(message, 0, 360, 0, 63)
+			#messages = [0] * 64
+			for cN,channel in enumerate(messages):
+				if channel != 0:
+					messages[cN] -= 2
+			messages[message] = 20
+			EntTec.senddmx(range(1,65),messages)
 
 
-	print EntTec.RGBcans([1,4,8])
-		 EntTec.senddmx(range(1,9),[250]*8)
-		 sleep(1)
-		 EntTec.senddmx(range(1,9),[0]*8)
-		 sleep(1)
+
+	# print EntTec.RGBcans([1,4,8]):
+	# 	 EntTec.senddmx(range(1,9),[250]*8)
+	# 	 sleep(1)
+	# 	 EntTec.senddmx(range(1,9),[0]*8)
+	# 	 sleep(1)
 	
 

@@ -15,6 +15,7 @@ class IRCAM:
 
     while True:
       data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes
+      self.sock.sendto(data, ('localhost',7004))
       if data[:17] == 'spat source 3 az ':
         return abs(int(data[17:]))
 

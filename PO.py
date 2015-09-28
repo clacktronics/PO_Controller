@@ -51,6 +51,9 @@ class DMXaddressUtil():
 		highlightColor = '#E8E9E8'
 
 		bgColours = {'Red':'#FFCCCC','Green':'#CCFFCC','Blue':'#66CCFF','White':'#FFFFEB'}
+
+		#======OVERALL=DMX=MESSAGE=SETTINGS======================
+
 		# DMX value label
 		Label(self.frame, text='Value',bg='#E8E9E8').grid(row=0,column=1)
 		# DMX intensity values for all channels
@@ -59,6 +62,7 @@ class DMXaddressUtil():
 			DMXValues[rowN].grid(row=rowN+1,column=1)
 			DMXValues[rowN].insert(END,255)
 
+		#======OVERALL=DMX=MESSAGE=SETTINGS======================
 
 		# light channel labeling
 		for lN,channel in enumerate(range(addLow,addHigh)):
@@ -77,10 +81,6 @@ class DMXaddressUtil():
 				channels[row][channel].insert(END,defaultMap[row][channel])
 				channels[row][channel].grid(row=rowN+1,column=cN+2)
 
-		# Arduino mapping
-		for lN,channel in enumerate(range(addLow,addHigh)):
-			pass
-
 		# Option Buttons
 
 		OPTIONS = ['00-15','16-31','32-47','48-63']
@@ -91,18 +91,10 @@ class DMXaddressUtil():
 		sel.config(width=10,bg='#FFE0B2')
 		
 		
-		applyButton = Button(self.frame, text="Apply",command=self.applyUpdate)
-		StartArduino = Button(self.frame, text="Start Arduino",command=HaroonThread.start)
-		StartIrcam = Button(self.frame, text="Start IRCAM",command=IrcamThread.start)
-		KillArduino = Button(self.frame, text="Kill Arduino",command=HaroonThread.stop)
-		KillIrcam = Button(self.frame, text="Kill IRCAM",command=IrcamThread.stop)
+
 
 		sel.grid(row=self.numberColours+2,column=1,columnspan=2)
-		applyButton.grid(row=self.numberColours+2,column=3,columnspan=2)
-		StartArduino.grid(row=self.numberColours+2,column=6,columnspan=2)
-		StartIrcam.grid(row=self.numberColours+2,column=10,columnspan=2)
-		KillArduino.grid(row=self.numberColours+2,column=8,columnspan=2)
-		KillIrcam.grid(row=self.numberColours+2,column=12,columnspan=2)
+
 
 
 	def applyUpdate(self):
@@ -323,29 +315,51 @@ if __name__ == "__main__":
 
 
 	master = Tk()
-	master.configure(background='#E8E9E8')
+
+	styleKwargs = {'background':'#E8E9E8','highlightbackground':'#E8E9E8'}
+
+	master.configure(**styleKwargs)
+	master.minsize(width=1000,height=600)
 	master.title('Paris Opera - Haroon Mirza')
 
-
 	OperaPins = range(1,64,8)
-
-
-	
-	
 
 	HaroonThread = ThreadedMapper(Arduino,EntTec)
 	IrcamThread = ThreadedMapper(IRCAM,EntTec)
 
-	DMXaddressesFrame = Frame(padx=10,pady=10)
-	DMXaddressesFrame.configure(background='#E8E9E8')
+	DMXaddressesFrame = Frame(padx=10,pady=10,**styleKwargs)
 	DMXutil = DMXaddressUtil(DMXaddressesFrame,channelColours)
 	DMXaddressesFrame.grid(row=1,column=1)
 
-	OperaCanvas = Canvas(master,bg='#E8E9E8',highlightbackground='#E8E9E8', width=600, height=500)
+	OperaCanvas = Canvas(width=600, height=500,**styleKwargs)
 	lightCan = lightCanvas(OperaCanvas)
 	lightCan.render()
 	master.bind("<Button-1>", lightCan.lampSelect)
-	
+
+	ControlButtonFrame = Frame(padx=10, **styleKwargs)
+	ControlButtonFrame.grid(row=0,column=0)
+
+	buttonDims = {'width':20} 
+	buttonDims.update(styleKwargs)
+
+	StartArduino = Button(ControlButtonFrame, text="Start Arduino",command=HaroonThread.start, **buttonDims)
+	StartIrcam = Button(ControlButtonFrame, text="Start IRCAM",command=IrcamThread.start, **buttonDims)
+	KillArduino = Button(ControlButtonFrame, text="Kill Arduino",command=HaroonThread.stop, **buttonDims)
+	KillIrcam = Button(ControlButtonFrame, text="Kill IRCAM",command=IrcamThread.stop, **buttonDims)
+
+	Label(ControlButtonFrame, text="Haroon", **styleKwargs).grid(row=0,column=0)
+
+	StartArduino.grid(row=1,column=0)
+	KillArduino.grid(row=2,column=0)
+
+	Label(ControlButtonFrame, text=" ", **styleKwargs).grid(row=3,column=0)
+
+	Label(ControlButtonFrame, text="Boulez", **styleKwargs).grid(row=4,column=0)
+
+	StartIrcam.grid(row=5,column=0)
+	KillIrcam.grid(row=6,column=0)
+
+
 
 
 	master.mainloop()

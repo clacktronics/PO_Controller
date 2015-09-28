@@ -22,7 +22,7 @@ class Arduino:
 			output = self.Arduino.readline()
 			try:
 				int(output[0])
-				return output[:9]
+				return output[:8]
 			except:
 				pass
 

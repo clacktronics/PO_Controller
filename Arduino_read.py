@@ -1,36 +1,60 @@
 import serial
+from device import device
 
-class Arduino:
-
+class Arduino(device):
+	''' Class for controlling the Arduino and streaming data from it'''
 	def __init__(self,port,baud):
-		self.Arduino = serial.Serial(port, baud)
-		self.type = 'Arduino'
+
+		self.connected = False
+		self.port = port
+		self.baud = baud
+		self.connect()
+
+
+	def __str__():
+			return "Arduino"
+
+	def connect(self):
+		try:
+			self.Arduino = serial.Serial(self.port, self.baud)
+			self.connected = True
+			print 'Yes Arduino'
+			return True
+		except:
+			self.connected = False
+			print 'No Arduino'
+			return False
 
 	def cue(self):
-		self.Arduino.write('x')
-		while True:
-			if self.Arduino.readline().strip() == "'s' to start and 'x' to reset":
-				self.Arduino.write('s')
-				return True
+		if self.isConnected():
+			self.Arduino.write('x')
+			while True:
+				if self.Arduino.readline().strip() == "'s' to start and 'x' to reset":
+					self.Arduino.write('s')
+					return True
+		else:
+			print 'Method cue does not work as Arduino is not connected'
 
 	def stop(self):
 		self.Arduino.write('x')
 
 	def readSequence(self):
-		
+
 		while True:
-			output = self.Arduino.readline()
-			try:
-				int(output[0])
-				return output[:8]
-			except:
-				pass
-
-
+			if self.connected:
+				output = self.Arduino.readline()
+				try:
+					int(output[0])
+					return output[:8]
+				except:
+					pass
+			else:
+				return "Attempt to send, no device connected"
 
 
 if __name__ == '__main__':
-	Arduino = Arduino('/dev/tty.usbmodemfd131',250000)
+	Arduino = Arduino('/dev/tty.usbmodemfa141',250000)
 	Arduino.cue()
-	while True:
-		print Arduino.readSequence()
+	if Arduino.isConnected():
+		while True:
+			print Arduino.readSequence()

@@ -1,6 +1,9 @@
 import hypermedia.net.*;
+//import com.hamoid.*;
 
-int PORT_RX=7003;
+//VideoExport videoExport;
+
+int PORT_RX=7004;
 String HOST_IP = "127.0.0.1";//IP Address of the PC in which this App is running
 UDP udp;//Create UDP object for recieving
 int position1, position2;
@@ -31,6 +34,7 @@ void setup() {
   frameRate(60);
   background(0);
   loop();
+  //videoExport = new VideoExport(this, "PO.mp4");
   
 }
 
@@ -58,12 +62,12 @@ void draw() {
 
   // Works out rotation from radians
   pos2 = map(pos2_float, 0.00, 360.00, -100.00, 100.00);
-  ypos = centery -200 + (sin(yangle) * circleSize) + yModifier;
-  xpos = centerx + 400 + (cos(yangle) * circleSize) + xModifier;
+  ypos = centery + (sin(yangle) * circleSize) + yModifier;
+  xpos = centerx + (cos(yangle) * circleSize) + xModifier;
   
  // println(xModifier + " - " + yModifier);
   rotationIncrementer(setDirection);
-  
+  //videoExport.saveFrame();
   
 } 
 

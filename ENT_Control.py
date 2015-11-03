@@ -1,13 +1,14 @@
-
 import serial
 from Arduino_read import Arduino
 from IRCAM import IRCAM
 import sys
 from time import sleep
+from device import device
 
-class EntTec:
+class EntTec(device):
 
 	def __init__(self,port,dmxChannels):
+
 		#char 126 is 7E in hex. It's used to start all DMX512 commands
 		self.DMXOPEN=chr(126)
 		#char 231 is E7 in hex. It's used to close all DMX512 commands
@@ -29,34 +30,42 @@ class EntTec:
 		#open serial port 4. This is where the USB virtual port hangs on my machine. You
 		#might need to change this number. Find out what com port your DMX controller is on
 		#and subtract 1, the ports are numbered 0-3 instead of 1-4
-		self.EntTec=serial.Serial(port) # '/dev/tty.usbserial-EN172718'
+		self.connected = False
+		self.port = port
 
-		#this writes the initialization codes to the DMX
-		self.EntTec.write( self.DMXOPEN+self.DMXINIT1+self.DMXCLOSE)
-		self.EntTec.write( self.DMXOPEN+self.DMXINIT2+self.DMXCLOSE)
+		self.connect()
 
-		# this sets up an array of 513 bytes, the first item in the array ( dmxdata[0] ) is the previously
-		#mentioned spacer byte following the header. This makes the array math more obvious
-		self.dmxDataList=[chr(0)]*513
-
+		self.dmxDataList=[chr(0)]*513 # this sets up an array of 513 bytes, the first item in the array ( dmxdata[0] ) is the previously mentioned spacer byte following the header. This makes the array math more obvious
 		self.dmxChannels = dmxChannels
 		self.DMXValues = {'Red':255,'Green':254,'Blue':253,'White':252}
 
 		#senddmx accepts the 513 byte long data string to keep the state of all the channels
 		# the channel number and the value for that channel
 		#senddmx writes to the serial port then returns the modified 513 byte array
- 
+
+	def connect(self):
+		try:
+			self.SerialDevice=serial.Serial(self.port) # '/dev/tty.usbserial-EN172718'
+			#this writes the initialization codes to the DMX
+			self.SerialDevice.write( self.DMXOPEN+self.DMXINIT1+self.DMXCLOSE)
+			self.SerialDevice.write( self.DMXOPEN+self.DMXINIT2+self.DMXCLOSE)
+			self.connected = True
+			print "Yes Ent"
+			return True
+		except:
+			self.connected = False
+			print "No Ent"
+			return False
+
 	def senddmx(self, chans, intensity):
-	        # because the spacer bit is [0], the channel number is the array item number
-	        # set the channel number to the proper value
-	        for chanN,chan in enumerate(chans):
-	        	outputDMX = int(intensity[chanN])
-	       		self.dmxDataList[chan]=chr(outputDMX)
-	        # join turns the array data into a string we can send down the DMX
-	        sdata=''.join(self.dmxDataList)
-	        # write the data to the serial port, this sends the data to your fixture
-	        self.EntTec.write(self.DMXOPEN+self.DMXINTENSITY+sdata+self.DMXCLOSE)
-	        # return the data with the new value in place
+		for chanN,chan in enumerate(chans):
+			outputDMX = int(intensity[chanN])
+			self.dmxDataList[chan]=chr(outputDMX)
+			sdata=''.join(self.dmxDataList)
+			if self.isConnected():
+			    self.EntTec.write(self.DMXOPEN+self.DMXINTENSITY+sdata+self.DMXCLOSE)
+			else:
+				print "Attempt to send, no device connected"
 
 	def RGBcans(self, chans):
 		channels_to_write = []
@@ -81,11 +90,15 @@ class EntTec:
 
 
 
+
 if __name__ == "__main__":
 
+	# This is all for testing and running the commands on the command line.
 
 	def rangeMapper(x, in_min, in_max, out_min, out_max):
 		return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
+
+	def clamp(n, smallest, largest): return max(smallest, min(n, largest))
 
 	messages = [0] * 64
 	mode = sys.argv[1]
@@ -95,11 +108,12 @@ if __name__ == "__main__":
 	for channelN,channel in enumerate(channelColours):
 		defaultMap[channel] = range(channelN,64*numberColours,numberColours)
 	DMXValues = [255,255,255,255]
-	
+
 	EntTec = EntTec('/dev/tty.usbserial-EN172718',defaultMap)
-	Arduino = Arduino('/dev/tty.usbmodemfd131',250000)
+
 
 	if mode == "mirza":
+		Arduino = Arduino('/dev/tty.usbmodemfd131',250000)
 		pins = [59, 51, 43, 35, 25, 17, 9, 1]
 		pins.reverse()
 		Arduino.cue()
@@ -110,17 +124,23 @@ if __name__ == "__main__":
 				sender.append(int(i) * 83)
 			EntTec.senddmx(pins,sender)
 	elif mode == "boulez":
-		IRCAM = IRCAM('localhost',7003)
+		IRCAM = IRCAM('0.0.0.0',7010)
 		while True:
 			message = IRCAM.getMessage()
-			print message
-			message = rangeMapper(message, 0, 360, 0, 63)
-			#messages = [0] * 64
-			for cN,channel in enumerate(messages):
-				if channel != 0:
-					messages[cN] -= 2
-			messages[message] = 20
-			EntTec.senddmx(range(1,65),messages)
+			if message != None:
+				print "in" + str(message)
+				message = rangeMapper(message, 0, 90, 0, 63)
+				#messages = [0] * 64
+				for cN,channel in enumerate(messages):
+					if channel != 0:
+						messages[cN] -= 2
+				message = clamp(message, 0, 63)
+				messages[message] = 20
+				EntTec.senddmx(range(1,65),messages)
+	elif mode == "test":
+		IRCAM = IRCAM('0.0.0.0',7010)
+		while True:
+			print IRCAM.allMessage()
 
 
 
@@ -129,5 +149,3 @@ if __name__ == "__main__":
 	# 	 sleep(1)
 	# 	 EntTec.senddmx(range(1,9),[0]*8)
 	# 	 sleep(1)
-	
-

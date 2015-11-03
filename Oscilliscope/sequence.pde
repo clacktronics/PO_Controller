@@ -56,8 +56,8 @@ void sequence() {
      circleSize = map(spatialData[3],0,360,50,300);
    }
    else if (cuePos < 75) {
-     xModifier = map(spatialData[1],0,360,0,100);
-     yModifier = map(spatialData[1],0,360,0,100);
+     xModifier = map(spatialData[2],0,360,0,100);
+     yModifier = map(spatialData[2],0,360,0,100);
      circleSize = 400;
      trail = 10;
      speed = 0.5;

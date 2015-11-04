@@ -7,12 +7,12 @@ import threading
 from time import sleep
 import os, sys, utils
 
-#========================================================================
+#===============================================================================
 # GLOBAL VARS
-#========================================================================
+#===============================================================================
 
 # Works out a DMX map for all the lights (starts at 0)
-channelColours = ['Red','Green','Blue','White','Zoom', 'bob']
+channelColours = ['Red','Green','Blue','White','Zoom']
 DMXValues = [255,255,255,255,255,255]
 numberColours = len(channelColours)
 
@@ -28,14 +28,13 @@ for arduino in range(64):
 	else:
 		arduinoMap.append(1)
 
-#========================================================================
+#===============================================================================
 # GUI CLASSES
-#========================================================================
+#===============================================================================
 
-#========================================================================
+#===============================================================================
 # CONTROL CLASSES
-#========================================================================
-
+#===============================================================================
 
 class ThreadedMapper(threading.Thread):
 
@@ -43,15 +42,18 @@ class ThreadedMapper(threading.Thread):
 		self.input_device = input_device
 		self.output_device = output_device
 		self.playThread = False
+		self.mode = self.input_device.__str__()
 
 		self.thread = threading.Thread(target=self.action)
 		self.thread.setDaemon(True)
 		self.thread.start()
 
 	def action(self):
+		print self.input_device
 		while True:
 			if self.playThread:
-				if self.input_device == "Arduino":
+				print type(self.mode)
+				if self.mode == 'Arduino':
 					print "Playing Arduino"
 					self.input_device.cue()
 					while True:
@@ -62,7 +64,6 @@ class ThreadedMapper(threading.Thread):
 							self.input_device.stop()
 							self.output_device.all(0)
 							break
-
 
 				elif self.input_device == "IRCAM":
 					print "Listening to IRCAM"
@@ -83,34 +84,29 @@ class ThreadedMapper(threading.Thread):
 		return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
 	def start(self):
+		print 'start!'
 		self.playThread = True
 
 	def stop(self):
 		self.playThread = False
 
-#========================================================================
+#===============================================================================
 # MAIN PROGRAM
-#========================================================================
+#===============================================================================
 
 if __name__ == "__main__":
-	try:
-		EntTec = EntTec('/dev/' + EnttecPort,defaultMap)
-		print "yes", EntTec
-	except:
 
-		EntTec = None
+	# Get ports (exclude bluetooth ports)
+	ports = [port for port in os.listdir('/dev/') if port[:4] == 'tty.' and port[:8] != 'tty.Blue' ]
 
-	try:
-		Arduino = Arduino('/dev/' + ArduinoPort,250000)
-	except:
-		print "no", Arduino
-		Arduino = None
+	ArduinoPort = ''
+	for port in ports:
+		if port[:12] == 'tty.usbmodem':
+			ArduinoPort = port
 
-	try:
-		IRCAM = IRCAM(IrcamIP,IrcamPort)
-	except:
-		print "no", IRCAM
-		IRCAM = None
+	EntTec = EntTec('/dev/tty.usbserial-EN172718',defaultMap)
+	Arduino = Arduino('/dev/' + ArduinoPort,250000)
+	IRCAM = IRCAM('localhost',5000)
 
 	# Initiate threads for running translating from one deivce to another
 	HaroonThread = ThreadedMapper(Arduino,EntTec)
@@ -165,5 +161,17 @@ if __name__ == "__main__":
 	allon.grid(row=10, columnspan=2, column=0)
 	alloff = Button(ControlButtonFrame, text="All off",command=IrcamThread.stop, **buttonDims)
 	alloff.grid(row=11, columnspan=2, column=0)
+
+	arduinoSelect = StringVar(ControlButtonFrame)
+	arduinoSelect.set(ArduinoPort)
+	PortSelectOut = OptionMenu(ControlButtonFrame, arduinoSelect,*ports)
+	PortSelectOut.grid(row=14, columnspan=2, column=0)
+	Label(ControlButtonFrame, text="Status: %s" % Arduino.isConnectedString() , **styleKwargs).grid(row=15, columnspan=2, column=0)
+
+	EntSelect = StringVar(ControlButtonFrame)
+	EntSelect.set('tty.usbserial-EN172718')
+	PortSelectOut = OptionMenu(ControlButtonFrame, EntSelect,*ports)
+	PortSelectOut.grid(row=16, columnspan=2, column=0)
+	Label(ControlButtonFrame, text="Status: %s" % EntTec.isConnectedString() , **styleKwargs).grid(row=17, columnspan=2, column=0)
 
 	master.mainloop()

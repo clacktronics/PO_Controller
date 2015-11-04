@@ -63,9 +63,10 @@ class EntTec(device):
 			self.dmxDataList[chan]=chr(outputDMX)
 			sdata=''.join(self.dmxDataList)
 			if self.isConnected():
-			    self.EntTec.write(self.DMXOPEN+self.DMXINTENSITY+sdata+self.DMXCLOSE)
+			    self.SerialDevice.write(self.DMXOPEN+self.DMXINTENSITY+sdata+self.DMXCLOSE)
 			else:
-				print "Attempt to send, no device connected"
+				pass
+				#print "Attempt to send, no device connected"
 
 	def RGBcans(self, chans):
 		channels_to_write = []
@@ -113,13 +114,14 @@ if __name__ == "__main__":
 
 
 	if mode == "mirza":
-		Arduino = Arduino('/dev/tty.usbmodemfd131',250000)
+		Arduino = Arduino('/dev/tty.usbmodemfa141',250000)
 		pins = [59, 51, 43, 35, 25, 17, 9, 1]
 		pins.reverse()
 		Arduino.cue()
 		while True:
 			sender = []
 			output =  Arduino.readSequence()
+			print output
 			for i in output:
 				sender.append(int(i) * 83)
 			EntTec.senddmx(pins,sender)

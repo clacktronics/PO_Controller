@@ -11,7 +11,7 @@ class Arduino(device):
 		self.connect()
 
 
-	def __str__():
+	def __str__(self):
 			return "Arduino"
 
 	def connect(self):
@@ -33,7 +33,7 @@ class Arduino(device):
 					self.Arduino.write('s')
 					return True
 		else:
-			print 'Method cue does not work as Arduino is not connected'
+			return 'Method cue does not work as Arduino is not connected'
 
 	def stop(self):
 		self.Arduino.write('x')
@@ -49,7 +49,7 @@ class Arduino(device):
 				except:
 					pass
 			else:
-				return "Attempt to send, no device connected"
+				print "Attempt to send, no device connected"
 
 
 if __name__ == '__main__':

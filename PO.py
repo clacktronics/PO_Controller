@@ -1,4 +1,5 @@
 from Tkinter import *
+#from ttk import *
 from math import sin, cos, pi
 from ENT_Control import EntTec
 from Arduino_read import Arduino
@@ -28,9 +29,83 @@ for arduino in range(64):
 	else:
 		arduinoMap.append(1)
 
+def connectDevices():
+	EntTec.connect('/dev/%s' % app.getEntPort()) #'/dev/tty.usbserial-EN172718'
+	Arduino.connect('/dev/%s' % app.getArdPort(), 250000)
+	IRCAM.connect('localhost',5000)
+	app.drawConnect()
+
 #===============================================================================
 # GUI CLASSES
 #===============================================================================
+
+class controlFrame(Frame):
+	def __init__(self, parent):
+		self.parent = parent
+	def initUI(self):
+		buttonDims = {'width':20}
+		buttonDims.update(styleKwargs)
+
+		self.ctrlFrame = Frame()
+		self.ctrlFrame.grid(row=0,column=0)
+		self.drawConnect()
+
+		Label(self.ctrlFrame, text="Cue", width=3, **styleKwargs).grid(row=0,column=0)
+		Label(self.ctrlFrame, text="255", width=3, **styleKwargs).grid(row=0,column=1)
+
+		Label(self.ctrlFrame, text="Haroon", **styleKwargs).grid(row=1, columnspan=2, column=0)
+
+		StartArduino = Button(self.ctrlFrame, text="Start Arduino",command=HaroonThread.start, **buttonDims)
+		StartArduino.grid(row=2, columnspan=2, column=0)
+
+		KillArduino = Button(self.ctrlFrame, text="Kill Arduino",command=HaroonThread.stop, **buttonDims)
+		KillArduino.grid(row=3, columnspan=2, column=0)
+
+		Label(self.ctrlFrame, text="Boulez", **styleKwargs).grid(row=4, columnspan=2, column=0)
+
+		StartIrcam = Button(self.ctrlFrame, text="Start IRCAM",command=IrcamThread.start, **buttonDims)
+		StartIrcam.grid(row=5, columnspan=2, column=0)
+		KillIrcam = Button(self.ctrlFrame, text="Kill IRCAM",command=IrcamThread.stop, **buttonDims)
+		KillIrcam.grid(row=6, columnspan=2, column=0)
+
+		Label(self.ctrlFrame, text="Test Patterns", **styleKwargs).grid(row=7, columnspan=2, column=0)
+
+		Acending = Button(self.ctrlFrame, text="Start Acending",command=IrcamThread.start, **buttonDims)
+		Acending.grid(row=8, columnspan=2, column=0)
+		KillAcending = Button(self.ctrlFrame, text="Kill Acending",command=IrcamThread.stop, **buttonDims)
+		KillAcending.grid(row=9, columnspan=2, column=0)
+
+		allon = Button(self.ctrlFrame, text="All on",command=IrcamThread.start, **buttonDims)
+		allon.grid(row=10, columnspan=2, column=0)
+		alloff = Button(self.ctrlFrame, text="All off",command=IrcamThread.stop, **buttonDims)
+		alloff.grid(row=11, columnspan=2, column=0)
+
+
+	def drawConnect(self):
+		self.arduinoSelect = StringVar(self.ctrlFrame)
+		self.arduinoSelect.set(ArduinoPort)
+		PortSelectOut = OptionMenu(self.ctrlFrame, self.arduinoSelect,*ports)
+		PortSelectOut.grid(row=14, columnspan=2, column=0)
+		Label(self.ctrlFrame, text="Status: %s" % Arduino.isConnectedString() , **styleKwargs).grid(row=15, columnspan=2, column=0)
+
+		self.EntSelect = StringVar(self.ctrlFrame)
+		self.EntSelect.set('tty.usbserial-EN172718')
+		PortSelectOut = OptionMenu(self.ctrlFrame, self.EntSelect,*ports)
+		PortSelectOut.grid(row=16, columnspan=2, column=0)
+		Label(self.ctrlFrame, text="Status: %s" % EntTec.isConnectedString() , **styleKwargs).grid(row=17, columnspan=2, column=0)
+
+		connectButton = Button(self.ctrlFrame, text="Reload Connections", command=connectDevices)
+		connectButton.grid(row=30, columnspan=2, column=0)
+
+	def getEntPort(self):
+		return self.EntSelect.get()
+
+	def getArdPort(self):
+		return self.arduinoSelect.get()
+
+	def drawControl(self):
+		pass
+
 
 #===============================================================================
 # CONTROL CLASSES
@@ -52,7 +127,6 @@ class ThreadedMapper(threading.Thread):
 		print self.input_device
 		while True:
 			if self.playThread:
-				print type(self.mode)
 				if self.mode == 'Arduino':
 					print "Playing Arduino"
 					self.input_device.cue()
@@ -65,7 +139,7 @@ class ThreadedMapper(threading.Thread):
 							self.output_device.all(0)
 							break
 
-				elif self.input_device == "IRCAM":
+				elif self.mode == "IRCAM":
 					print "Listening to IRCAM"
 					while True:
 						message = self.input_device.getMessage()
@@ -104,21 +178,33 @@ if __name__ == "__main__":
 		if port[:12] == 'tty.usbmodem':
 			ArduinoPort = port
 
-	EntTec = EntTec('/dev/tty.usbserial-EN172718',defaultMap)
-	Arduino = Arduino('/dev/' + ArduinoPort,250000)
-	IRCAM = IRCAM('localhost',5000)
+
+
+	# Setup master frame
+	styleKwargs = {'background':'#E8E9E8','highlightbackground':'#E8E9E8'}
+	master = Tk()
+	master.configure(**styleKwargs)
+	master.minsize(width=1000,height=600)
+	master.title('Paris Opera - Haroon Mirza')
+
+
+
+	# Setup classes for
+	EntTec = EntTec()
+	Arduino = Arduino()
+	IRCAM = IRCAM()
 
 	# Initiate threads for running translating from one deivce to another
 	HaroonThread = ThreadedMapper(Arduino,EntTec)
 	IrcamThread = ThreadedMapper(IRCAM,EntTec)
 
-	# Make GUI
-	master = Tk()
-	styleKwargs = {'background':'#E8E9E8','highlightbackground':'#E8E9E8'}
+	# Setup GUI class
+	app = controlFrame(master)
+	app.initUI()
+	connectDevices()
 
-	master.configure(**styleKwargs)
-	master.minsize(width=1000,height=600)
-	master.title('Paris Opera - Haroon Mirza')
+
+
 
 	OperaPins = range(1,64,8)
 
@@ -126,52 +212,8 @@ if __name__ == "__main__":
 
 	# Control buttons
 
-	ControlButtonFrame = Frame(padx=10)
-	ControlButtonFrame.grid(row=0,column=0)
+
 	#
-	buttonDims = {'width':20}
-	buttonDims.update(styleKwargs)
-	#
-	Label(ControlButtonFrame, text="Cue", width=3, **styleKwargs).grid(row=0,column=0)
-	Label(ControlButtonFrame, text="255", width=3, **styleKwargs).grid(row=0,column=1)
 
-	Label(ControlButtonFrame, text="Haroon", **styleKwargs).grid(row=1, columnspan=2, column=0)
-
-	StartArduino = Button(ControlButtonFrame, text="Start Arduino",command=HaroonThread.start, **buttonDims)
-	StartArduino.grid(row=2, columnspan=2, column=0)
-
-	KillArduino = Button(ControlButtonFrame, text="Kill Arduino",command=HaroonThread.stop, **buttonDims)
-	KillArduino.grid(row=3, columnspan=2, column=0)
-
-	Label(ControlButtonFrame, text="Boulez", **styleKwargs).grid(row=4, columnspan=2, column=0)
-
-	StartIrcam = Button(ControlButtonFrame, text="Start IRCAM",command=IrcamThread.start, **buttonDims)
-	StartIrcam.grid(row=5, columnspan=2, column=0)
-	KillIrcam = Button(ControlButtonFrame, text="Kill IRCAM",command=IrcamThread.stop, **buttonDims)
-	KillIrcam.grid(row=6, columnspan=2, column=0)
-
-	Label(ControlButtonFrame, text="Test Patterns", **styleKwargs).grid(row=7, columnspan=2, column=0)
-
-	Acending = Button(ControlButtonFrame, text="Start Acending",command=IrcamThread.start, **buttonDims)
-	Acending.grid(row=8, columnspan=2, column=0)
-	KillAcending = Button(ControlButtonFrame, text="Kill Acending",command=IrcamThread.stop, **buttonDims)
-	KillAcending.grid(row=9, columnspan=2, column=0)
-
-	allon = Button(ControlButtonFrame, text="All on",command=IrcamThread.start, **buttonDims)
-	allon.grid(row=10, columnspan=2, column=0)
-	alloff = Button(ControlButtonFrame, text="All off",command=IrcamThread.stop, **buttonDims)
-	alloff.grid(row=11, columnspan=2, column=0)
-
-	arduinoSelect = StringVar(ControlButtonFrame)
-	arduinoSelect.set(ArduinoPort)
-	PortSelectOut = OptionMenu(ControlButtonFrame, arduinoSelect,*ports)
-	PortSelectOut.grid(row=14, columnspan=2, column=0)
-	Label(ControlButtonFrame, text="Status: %s" % Arduino.isConnectedString() , **styleKwargs).grid(row=15, columnspan=2, column=0)
-
-	EntSelect = StringVar(ControlButtonFrame)
-	EntSelect.set('tty.usbserial-EN172718')
-	PortSelectOut = OptionMenu(ControlButtonFrame, EntSelect,*ports)
-	PortSelectOut.grid(row=16, columnspan=2, column=0)
-	Label(ControlButtonFrame, text="Status: %s" % EntTec.isConnectedString() , **styleKwargs).grid(row=17, columnspan=2, column=0)
 
 	master.mainloop()

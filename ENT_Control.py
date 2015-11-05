@@ -7,7 +7,7 @@ from device import device
 
 class EntTec(device):
 
-	def __init__(self,port,dmxChannels):
+	def __init__(self):
 
 		#char 126 is 7E in hex. It's used to start all DMX512 commands
 		self.DMXOPEN=chr(126)
@@ -31,21 +31,17 @@ class EntTec(device):
 		#might need to change this number. Find out what com port your DMX controller is on
 		#and subtract 1, the ports are numbered 0-3 instead of 1-4
 		self.connected = False
-		self.port = port
-
-		self.connect()
 
 		self.dmxDataList=[chr(0)]*513 # this sets up an array of 513 bytes, the first item in the array ( dmxdata[0] ) is the previously mentioned spacer byte following the header. This makes the array math more obvious
-		self.dmxChannels = dmxChannels
 		self.DMXValues = {'Red':255,'Green':254,'Blue':253,'White':252}
 
 		#senddmx accepts the 513 byte long data string to keep the state of all the channels
 		# the channel number and the value for that channel
 		#senddmx writes to the serial port then returns the modified 513 byte array
 
-	def connect(self):
+	def connect(self, port):
 		try:
-			self.SerialDevice=serial.Serial(self.port) # '/dev/tty.usbserial-EN172718'
+			self.SerialDevice=serial.Serial(port) # '/dev/tty.usbserial-EN172718'
 			#this writes the initialization codes to the DMX
 			self.SerialDevice.write( self.DMXOPEN+self.DMXINIT1+self.DMXCLOSE)
 			self.SerialDevice.write( self.DMXOPEN+self.DMXINIT2+self.DMXCLOSE)
@@ -68,19 +64,6 @@ class EntTec(device):
 				pass
 				#print "Attempt to send, no device connected"
 
-	def RGBcans(self, chans):
-		channels_to_write = []
-		values_to_write = []
-		for chan in chans:
-			channels_to_write.append(self.dmxChannels['Red'][chan])
-			values_to_write.append(self.DMXValues['Red'])
-			channels_to_write.append(self.dmxChannels['Green'][chan])
-			values_to_write.append(self.DMXValues['Green'])
-			channels_to_write.append(self.dmxChannels['Blue'][chan])
-			values_to_write.append(self.DMXValues['Blue'])
-			channels_to_write.append(self.dmxChannels['White'][chan])
-			values_to_write.append(self.DMXValues['White'])
-		senddmx(channels_to_write, values_to_write)
 
 
 	def all(self,n):
@@ -117,7 +100,7 @@ if __name__ == "__main__":
 		Arduino = Arduino('/dev/tty.usbmodemfa141',250000)
 		pins = [59, 51, 43, 35, 25, 17, 9, 1]
 		pins.reverse()
-		Arduino.cue()
+		print Arduino.cue()
 		while True:
 			sender = []
 			output =  Arduino.readSequence()

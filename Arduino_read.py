@@ -3,20 +3,15 @@ from device import device
 
 class Arduino(device):
 	''' Class for controlling the Arduino and streaming data from it'''
-	def __init__(self,port,baud):
-
+	def __init__(self):
 		self.connected = False
-		self.port = port
-		self.baud = baud
-		self.connect()
-
-
+		
 	def __str__(self):
 			return "Arduino"
 
-	def connect(self):
+	def connect(self, port, baud):
 		try:
-			self.Arduino = serial.Serial(self.port, self.baud)
+			self.Arduino = serial.Serial(port, baud)
 			self.connected = True
 			print 'Yes Arduino'
 			return True

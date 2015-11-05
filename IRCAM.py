@@ -3,16 +3,17 @@ from device import device
 
 class IRCAM(device):
 
-  def __init__(self,IP,port):
-    self.UDP_IP = IP
-    self.UDP_PORT = port
-    self.type = 'IRCAM'
-
-    self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
-    self.sock.bind((self.UDP_IP, self.UDP_PORT))
+  def __init__(self):
+    pass
 
   def __str__(self):
     return "IRCAM"
+
+  def connect(self, IP, port):
+    self.UDP_IP = IP
+    self.UDP_PORT = port
+    self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
+    self.sock.bind((self.UDP_IP, self.UDP_PORT))
 
   def getMessage(self):
 

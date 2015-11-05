@@ -6,4 +6,4 @@ class device():
 		if self.connected == True:
 			return 'Connected'
 		else:
-			return 'not connected'
+			return 'Disconect'

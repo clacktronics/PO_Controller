@@ -5,7 +5,7 @@ class Arduino(device):
 	''' Class for controlling the Arduino and streaming data from it'''
 	def __init__(self):
 		self.connected = False
-		
+
 	def __str__(self):
 			return "Arduino"
 
@@ -16,9 +16,13 @@ class Arduino(device):
 			print 'Yes Arduino'
 			return True
 		except:
+			self.Arduino = serial.Serial('/dev/tty')
 			self.connected = False
 			print 'No Arduino'
 			return False
+
+	def disconnect(self):
+		self.Arduino.close()
 
 	def cue(self):
 		if self.isConnected():

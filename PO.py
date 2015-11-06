@@ -29,11 +29,7 @@ for arduino in range(64):
 	else:
 		arduinoMap.append(1)
 
-def connectDevices():
-	EntTec.connect('/dev/%s' % app.getEntPort()) #'/dev/tty.usbserial-EN172718'
-	Arduino.connect('/dev/%s' % app.getArdPort(), 250000)
-	IRCAM.connect('localhost',5000)
-	app.drawConnect()
+
 
 #===============================================================================
 # GUI CLASSES
@@ -187,7 +183,19 @@ if __name__ == "__main__":
 	master.minsize(width=1000,height=600)
 	master.title('Paris Opera - Haroon Mirza')
 
+	def connectDevices():
+		#HaroonThread.__init__(Arduino,EntTec)
+		#IrcamThread.__init__(IRCAM,EntTec)
+		try: Arduino.disconnect()
+		except: pass
+		Arduino.connect('/dev/%s' % app.getArdPort(), 250000)
 
+		try: EntTec.disconnect()
+		except: pass
+		EntTec.connect('/dev/%s' % app.getEntPort()) #'/dev/tty.usbserial-EN172718'
+
+		IRCAM.connect('localhost',7007)
+		app.drawConnect()
 
 	# Setup classes for
 	EntTec = EntTec()

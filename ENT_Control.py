@@ -4,11 +4,12 @@ from IRCAM import IRCAM
 import sys
 from time import sleep
 from device import device
+from mapping_generator import parLed
 
-class EntTec(device):
+class EntTec(parLed, device):
 
 	def __init__(self):
-
+		parLed.__init__(self)
 		#char 126 is 7E in hex. It's used to start all DMX512 commands
 		self.DMXOPEN=chr(126)
 		#char 231 is E7 in hex. It's used to close all DMX512 commands
@@ -53,17 +54,25 @@ class EntTec(device):
 			print "No Ent"
 			return False
 
+	def disconnect(self):
+		try:
+			self.SerialDevice.close()
+		except:
+			pass
+
 	def senddmx(self, chans, intensity):
 		for chanN,chan in enumerate(chans):
 			outputDMX = int(intensity[chanN])
 			self.dmxDataList[chan]=chr(outputDMX)
 			sdata=''.join(self.dmxDataList)
-			if self.isConnected():
-			    self.SerialDevice.write(self.DMXOPEN+self.DMXINTENSITY+sdata+self.DMXCLOSE)
-			else:
-				pass
+		if self.isConnected():
+		    self.SerialDevice.write(self.DMXOPEN+self.DMXINTENSITY+sdata+self.DMXCLOSE)
+		else:
+			pass
 				#print "Attempt to send, no device connected"
 
+	def sendLights(self, lightsList, intensityList):
+		self.senddmx(self.getLampChannels(lightsList),self.getIntensity(intensityList))
 
 
 	def all(self,n):
@@ -71,9 +80,6 @@ class EntTec(device):
 		# Theeseeese are the LEDs for 8
 		#51,35,17,1
 	    #9,25,43,59
-
-
-
 
 if __name__ == "__main__":
 
@@ -93,11 +99,13 @@ if __name__ == "__main__":
 		defaultMap[channel] = range(channelN,64*numberColours,numberColours)
 	DMXValues = [255,255,255,255]
 
-	EntTec = EntTec('/dev/tty.usbserial-EN172718',defaultMap)
+	EntTec = EntTec()
+	EntTec.connect('/dev/tty.usbserial-EN172718')
 
 
 	if mode == "mirza":
-		Arduino = Arduino('/dev/tty.usbmodemfa141',250000)
+		Arduino = Arduino()
+		Arduino.connect('/dev/tty.usbmodemfa141',250000)
 		pins = [59, 51, 43, 35, 25, 17, 9, 1]
 		pins.reverse()
 		print Arduino.cue()
@@ -107,7 +115,7 @@ if __name__ == "__main__":
 			print output
 			for i in output:
 				sender.append(int(i) * 83)
-			EntTec.senddmx(pins,sender)
+			EntTec.sendLights(pins,sender)
 	elif mode == "boulez":
 		IRCAM = IRCAM('0.0.0.0',7010)
 		while True:
@@ -121,11 +129,25 @@ if __name__ == "__main__":
 						messages[cN] -= 2
 				message = clamp(message, 0, 63)
 				messages[message] = 20
-				EntTec.senddmx(range(1,65),messages)
+				#EntTec.senddmx(range(1,65),messages)
+				EntTec.sendLights(range(1,65),messages)
 	elif mode == "test":
-		IRCAM = IRCAM('0.0.0.0',7010)
 		while True:
-			print IRCAM.allMessage()
+			# EntTec.senddmx([6,7,8,9,10,11,12,13,14,15], [255,255,255,255,255,255,255,255,255,255])
+			# sleep(1)
+			# EntTec.senddmx([6,7,8,9,10,11,12,13,14,15], [0,255,0,255,0,255,0,255,0,255])
+			# sleep(1)
+			EntTec.sendLights([2,3], [255,255])
+			sleep(.01)
+			EntTec.sendLights([2,3], [0,0])
+			sleep(.01)
+
+	elif mode == "test2":
+		while True:
+			EntTec.all(255)
+			sleep(.1)
+			EntTec.all(0)
+			sleep(.1)
 
 
 

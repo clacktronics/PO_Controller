@@ -6,6 +6,10 @@ class parLed():
         #
         self.lightColours = ['Red', 'Green', 'Blue', 'White', 'Zoom']
         self.lightIntensity = [10, 20, 30, 40, 255]
+
+        #self.lightColours = ['Red']
+        #self.lightIntensity = [255]
+
         self.parLed = {}
 
         startingChannel = 1
@@ -34,8 +38,6 @@ class parLed():
                 #returnList.append(prop)
                 returnList.append(utils.map(value, 0, 255, 0, prop))
         return returnList
-
-
 
 if __name__ == '__main__':
     parLed = parLed()

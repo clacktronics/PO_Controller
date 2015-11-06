@@ -6,6 +6,8 @@ from time import sleep
 from device import device
 from mapping_generator import parLed
 
+
+
 class EntTec(parLed, device):
 
 	def __init__(self):
@@ -82,14 +84,7 @@ class EntTec(parLed, device):
 	    #9,25,43,59
 
 if __name__ == "__main__":
-
-	# This is all for testing and running the commands on the command line.
-
-	def rangeMapper(x, in_min, in_max, out_min, out_max):
-		return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
-
-	def clamp(n, smallest, largest): return max(smallest, min(n, largest))
-
+	from utils import map, clamp
 	messages = [0] * 64
 	mode = sys.argv[1]
 	channelColours = ['Red','Green','Blue','White']
@@ -117,12 +112,13 @@ if __name__ == "__main__":
 				sender.append(int(i) * 83)
 			EntTec.sendLights(pins,sender)
 	elif mode == "boulez":
-		IRCAM = IRCAM('0.0.0.0',7010)
+		IRCAM = IRCAM()
+		IRCAM.connect('0.0.0.0',7007)
 		while True:
 			message = IRCAM.getMessage()
 			if message != None:
 				print "in" + str(message)
-				message = rangeMapper(message, 0, 90, 0, 63)
+				message = map(message, 0, 90, 0, 63)
 				#messages = [0] * 64
 				for cN,channel in enumerate(messages):
 					if channel != 0:
@@ -130,7 +126,7 @@ if __name__ == "__main__":
 				message = clamp(message, 0, 63)
 				messages[message] = 20
 				#EntTec.senddmx(range(1,65),messages)
-				EntTec.sendLights(range(1,65),messages)
+				EntTec.senddmx(range(1,65),messages)
 	elif mode == "test":
 		while True:
 			# EntTec.senddmx([6,7,8,9,10,11,12,13,14,15], [255,255,255,255,255,255,255,255,255,255])

@@ -19,10 +19,10 @@ class IRCAM(device):
 
     data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes
     self.sock.sendto(data, ('localhost',7004))
-    # if data[:12] == 'spat source ':
-    #   value = data[17:]
-    #   if value != None:
-    #     return abs(int(float(value)))
+    if data[:12] == 'spat source ':
+      value = data[17:]
+      if value != None:
+        return abs(int(float(value)))
     if data[:5] == 'pitch':
       value = data[5:]
       if value != None:

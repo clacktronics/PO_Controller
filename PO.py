@@ -3,9 +3,12 @@ from Tkinter import *
 from math import sin, cos, pi
 from ENT_Control import EntTec
 from Arduino_read import Arduino
+from Processing_Control import processing
 from IRCAM import IRCAM
 import threading
 from time import sleep
+from utils import map, clamp
+from test_gen import testCircle, testAll
 import os, sys, utils
 
 #===============================================================================
@@ -66,14 +69,14 @@ class controlFrame(Frame):
 
 		Label(self.ctrlFrame, text="Test Patterns", **styleKwargs).grid(row=7, columnspan=2, column=0)
 
-		Acending = Button(self.ctrlFrame, text="Start Acending",command=IrcamThread.start, **buttonDims)
+		Acending = Button(self.ctrlFrame, text="Start Acending",command=CircleThread.start, **buttonDims)
 		Acending.grid(row=8, columnspan=2, column=0)
-		KillAcending = Button(self.ctrlFrame, text="Kill Acending",command=IrcamThread.stop, **buttonDims)
+		KillAcending = Button(self.ctrlFrame, text="Kill Acending",command=CircleThread.stop, **buttonDims)
 		KillAcending.grid(row=9, columnspan=2, column=0)
 
-		allon = Button(self.ctrlFrame, text="All on",command=IrcamThread.start, **buttonDims)
+		allon = Button(self.ctrlFrame, text="All on",command=AllThread.start, **buttonDims)
 		allon.grid(row=10, columnspan=2, column=0)
-		alloff = Button(self.ctrlFrame, text="All off",command=IrcamThread.stop, **buttonDims)
+		alloff = Button(self.ctrlFrame, text="All off",command=AllThread.stop, **buttonDims)
 		alloff.grid(row=11, columnspan=2, column=0)
 
 
@@ -122,32 +125,69 @@ class ThreadedMapper(threading.Thread):
 	def action(self):
 		print self.input_device
 		while True:
+
 			if self.playThread:
+
+			# Arduino Mode
 				if self.mode == 'Arduino':
 					print "Playing Arduino"
 					self.input_device.cue()
+					ArduinoLights = [59, 51, 43, 35, 25, 17, 9, 1]
 					while True:
+						ArduinoStep = []
 						output = self.input_device.readSequence()
-						self.output_device.senddmx(OperaPins,output)
+						for i in output:
+							ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
+						self.output_device.senddmx(ArduinoLights,ArduinoStep)
 						if not self.playThread:
 							print "Stopping Arduino"
 							self.input_device.stop()
 							self.output_device.all(0)
 							break
-
+			# IRCAM Mode
 				elif self.mode == "IRCAM":
 					print "Listening to IRCAM"
+					messages = [0] * 64
 					while True:
 						message = self.input_device.getMessage()
-						message = self.rangeMapper(message, 0, 360, 0, 63)
-						print message
-						messages = [0] * 64
-						messages[message] = 3
-						self.output_device.senddmx(range(1,65),messages)
+						if message != None:
+							print message
+							message = map(message, 0, 360, 0, 64)
+							messages[message] = 255
+
+							for cN,channel in enumerate(messages):
+								if channel != 0:
+									messages[cN] -= 85
+
+							self.output_device.senddmx(range(1,65),messages)
+							if not self.playThread:
+								print "Stopping IRCAM"
+								self.output_device.all(0)
+								break
+			# testCircle Mode
+				elif self.mode == "testCircle":
+					while True:
+						output = self.input_device.circle()
+						print output
+						self.output_device.sendLights(range(1,65),output)
+
 						if not self.playThread:
-							print "Stopping IRCAM"
+							print "Stopping Circle test"
+							self.input_device.reset()
 							self.output_device.all(0)
 							break
+			# testAll Mode
+				elif self.mode == "testAll":
+					while True:
+						output = self.input_device.all()
+						print output
+						self.output_device.sendLights(range(1,65),output)
+
+						if not self.playThread:
+							print "Stopping All test"
+							self.output_device.all(0)
+							break
+
 			sleep(0.1)
 
 	def rangeMapper(self,x, in_min, in_max, out_min, out_max):
@@ -197,14 +237,19 @@ if __name__ == "__main__":
 		IRCAM.connect('localhost',7007)
 		app.drawConnect()
 
-	# Setup classes for
+	# Setup classes for the things the program controls
 	EntTec = EntTec()
 	Arduino = Arduino()
 	IRCAM = IRCAM()
+	Oscilliscope =  processing()
+	testCircle = testCircle()
+	testAll = testAll()
 
 	# Initiate threads for running translating from one deivce to another
 	HaroonThread = ThreadedMapper(Arduino,EntTec)
 	IrcamThread = ThreadedMapper(IRCAM,EntTec)
+	CircleThread = ThreadedMapper(testCircle,EntTec)
+	AllThread = ThreadedMapper(testAll,EntTec)
 
 	# Setup GUI class
 	app = controlFrame(master)

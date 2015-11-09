@@ -150,6 +150,7 @@ class ThreadedMapper(threading.Thread):
 						if message != None:
 							print message
 							message = map(message, 0, 360, 0, 64)
+							message = clamp(message, 0, 64)
 							messages[message] = 255
 
 							for cN,channel in enumerate(messages):

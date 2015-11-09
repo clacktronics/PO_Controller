@@ -16,8 +16,10 @@ class testCircle(device):
             self.test_init = 1
         else:
             self.test_init += 1
+        print c
         output = [0] * 65
-        output[c] = 255
+        output[c-1] = 255
+        print output
         return output
 
     def reset(self):
@@ -31,11 +33,32 @@ class testAll(device):
     def __str__(self):
         return "testAll"
 
-    def all(self):
-        sleep(.6)
-        output = self.toggle
-        self.toggle = not self.toggle
+    def all(self, output):
         if output == True:
             return [255] * 64
         else:
             return [0] * 64
+
+class fadeAll(device):
+    def __init__(self):
+        self.connected = True
+        self.direction = 1
+        self.test_init = 0
+
+    def __str__(self):
+        return "fadeAll"
+
+    def reset(self):
+        self.test_init = 0
+
+    def fade(self):
+        sleep(.05)
+        c = self.test_init
+        if self.test_init >= 255:
+            self.direction = -1
+        elif self.test_init <= 0:
+            self.direction = 1
+        self.test_init += self.direction
+        print c
+        output = [c] * 65
+        return output

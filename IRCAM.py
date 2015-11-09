@@ -15,6 +15,9 @@ class IRCAM(device):
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
     self.sock.bind((self.UDP_IP, self.UDP_PORT))
 
+  def disconnect(self):
+    self.sock.close()
+
   def getMessage(self):
 
     data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes

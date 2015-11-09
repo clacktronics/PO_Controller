@@ -64,8 +64,7 @@ class EntTec(parLed, device):
 
 	def senddmx(self, chans, intensity):
 		for chanN,chan in enumerate(chans):
-			outputDMX = int(intensity[chanN])
-			self.dmxDataList[chan]=chr(outputDMX)
+			self.dmxDataList[chan]=chr(intensity[chanN])
 			sdata=''.join(self.dmxDataList)
 		if self.isConnected():
 		    self.SerialDevice.write(self.DMXOPEN+self.DMXINTENSITY+sdata+self.DMXCLOSE)
@@ -74,6 +73,7 @@ class EntTec(parLed, device):
 				#print "Attempt to send, no device connected"
 
 	def sendLights(self, lightsList, intensityList):
+		#print self.getLampChannels(lightsList),self.getIntensity(intensityList)
 		self.senddmx(self.getLampChannels(lightsList),self.getIntensity(intensityList))
 
 

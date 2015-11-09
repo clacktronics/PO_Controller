@@ -4,11 +4,13 @@ class parLed():
     def __init__(self):
         self.numberOfLights = 64
         #
-        self.lightColours = ['Red', 'Green', 'Blue', 'White', 'Zoom']
-        self.lightIntensity = [10, 20, 30, 40, 255]
+        self.lightColours = ['Red', 'Green', 'Blue', 'White', 'Zoom', 'Intensity']
+        self.lightIntensityOn = [100, 0, 0, 255, 0, 255]
+        self.lightIntensityOff = [0, 0, 0, 0, 0, 255]
 
-        #self.lightColours = ['Red']
-        #self.lightIntensity = [255]
+        # self.lightColours = ['Red']
+        # self.lightIntensityOn = [255]
+        # self.lightIntensityOff = [0]
 
         self.parLed = {}
 
@@ -34,9 +36,9 @@ class parLed():
         """produce the values needed for each lamp"""
         returnList = []
         for value in lampValues:
-            for prop in self.lightIntensity:
+            for propN, prop in enumerate(self.lightIntensityOn):
                 #returnList.append(prop)
-                returnList.append(utils.map(value, 0, 255, 0, prop))
+                returnList.append(utils.map(value, 0, 255, self.lightIntensityOff[propN], prop))
         return returnList
 
 if __name__ == '__main__':

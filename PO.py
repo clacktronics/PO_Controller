@@ -1,47 +1,29 @@
+# Python libraries
 from Tkinter import *
-#from ttk import *
-from math import sin, cos, pi
+from time import sleep
+
+import os, sys, utils, threading
+
+# My modules
 from ENT_Control import EntTec
 from Arduino_read import Arduino
 from Processing_Control import processing
 from IRCAM import IRCAM
-import threading
-from time import sleep
+from test_gen import testCircle, testAll, fadeAll
+
 from utils import map, clamp
-from test_gen import testCircle, testAll
-import os, sys, utils
-
-#===============================================================================
-# GLOBAL VARS
-#===============================================================================
-
-# Works out a DMX map for all the lights (starts at 0)
-channelColours = ['Red','Green','Blue','White','Zoom']
-DMXValues = [255,255,255,255,255,255]
-numberColours = len(channelColours)
-
-channels = {} # global for the dmx channel boxes, it is filled when DMXaddresUtil is called
-defaultMap = {} # global for the default mapping for said channels
-
-
-# mapping arduino pins to roof (needed???)
-arduinoMap = []
-for arduino in range(64):
-	if arduino % 8:
-		arduinoMap.append(0)
-	else:
-		arduinoMap.append(1)
-
-
 
 #===============================================================================
 # GUI CLASSES
 #===============================================================================
 
 class controlFrame(Frame):
+	"""Main window for the control of the program"""
 	def __init__(self, parent):
 		self.parent = parent
+
 	def initUI(self):
+		"""Renders the GUI"""
 		buttonDims = {'width':20}
 		buttonDims.update(styleKwargs)
 
@@ -79,8 +61,14 @@ class controlFrame(Frame):
 		alloff = Button(self.ctrlFrame, text="All off",command=AllThread.stop, **buttonDims)
 		alloff.grid(row=11, columnspan=2, column=0)
 
+		fadeon = Button(self.ctrlFrame, text="Fade on",command=FadeThread.start, **buttonDims)
+		fadeon.grid(row=12, columnspan=2, column=0)
+		fadeoff = Button(self.ctrlFrame, text="Fade off",command=FadeThread.stop, **buttonDims)
+		fadeoff.grid(row=13, columnspan=2, column=0)
+
 
 	def drawConnect(self):
+		"""Connection status render"""
 		self.arduinoSelect = StringVar(self.ctrlFrame)
 		self.arduinoSelect.set(ArduinoPort)
 		PortSelectOut = OptionMenu(self.ctrlFrame, self.arduinoSelect,*ports)
@@ -96,14 +84,12 @@ class controlFrame(Frame):
 		connectButton = Button(self.ctrlFrame, text="Reload Connections", command=connectDevices)
 		connectButton.grid(row=30, columnspan=2, column=0)
 
+
 	def getEntPort(self):
 		return self.EntSelect.get()
 
 	def getArdPort(self):
 		return self.arduinoSelect.get()
-
-	def drawControl(self):
-		pass
 
 
 #===============================================================================
@@ -123,27 +109,38 @@ class ThreadedMapper(threading.Thread):
 		self.thread.start()
 
 	def action(self):
-		print self.input_device
+		"""Runs a loop within a thread, different action depending on input_device"""
+		print '%s thread initiated /n' % self.input_device
 		while True:
 
 			if self.playThread:
 
 			# Arduino Mode
 				if self.mode == 'Arduino':
-					print "Playing Arduino"
-					self.input_device.cue()
-					ArduinoLights = [59, 51, 43, 35, 25, 17, 9, 1]
+					print "Start Arduino"
+					self.input_device.cue() # Send a start command to the Arduino over serial
+					ArduinoLights = [59, 51, 43, 35, 25, 17, 9, 1] # Mapping of the 8 arduono lights
+					#ArduinoLights = [1, 2, 3, 4, 5, 6, 7, 8]
+					#ArduinoLights.reverse()
+					# This loop waits for each step from the arduino then it passes the values to the DMX device
+					# It only ends when the user presses the button to set playThread False
 					while True:
-						ArduinoStep = []
-						output = self.input_device.readSequence()
+						ArduinoStep = [] # New empty list for the DMX send
+						output = self.input_device.readSequence() # this blocks until it can return a value
+						# string to list > this could be done more efficiently using list()?
 						for i in output:
 							ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
-						self.output_device.senddmx(ArduinoLights,ArduinoStep)
+
+						# Send list to DMX output
+						self.output_device.sendLights(ArduinoLights,ArduinoStep)
+
+						# Terminate when button sets playThread False, closes port
 						if not self.playThread:
 							print "Stopping Arduino"
 							self.input_device.stop()
 							self.output_device.all(0)
 							break
+
 			# IRCAM Mode
 				elif self.mode == "IRCAM":
 					print "Listening to IRCAM"
@@ -159,16 +156,16 @@ class ThreadedMapper(threading.Thread):
 								if channel != 0:
 									messages[cN] -= 85
 
-							self.output_device.senddmx(range(1,65),messages)
+							self.output_device.sendLights(range(1,65),messages)
 							if not self.playThread:
 								print "Stopping IRCAM"
 								self.output_device.all(0)
 								break
+
 			# testCircle Mode
 				elif self.mode == "testCircle":
 					while True:
 						output = self.input_device.circle()
-						print output
 						self.output_device.sendLights(range(1,65),output)
 
 						if not self.playThread:
@@ -176,17 +173,30 @@ class ThreadedMapper(threading.Thread):
 							self.input_device.reset()
 							self.output_device.all(0)
 							break
+
 			# testAll Mode
 				elif self.mode == "testAll":
 					while True:
-						output = self.input_device.all()
-						print output
-						self.output_device.sendLights(range(1,65),output)
-
-						if not self.playThread:
-							print "Stopping All test"
-							self.output_device.all(0)
+						if self.playThread:
+							output = self.input_device.all(True)
+							self.output_device.sendLights(range(1,65), output)
+						elif not self.playThread:
+							print 'stop'
+							output = self.input_device.all(False)
+							self.output_device.sendLights(range(1,65), output)
 							break
+
+			# fadeAll Mode
+				elif self.mode == "fadeAll":
+							while True:
+								output = self.input_device.fade()
+								self.output_device.sendLights(range(1,65),output)
+
+								if not self.playThread:
+									print "Stopping fade test"
+									self.input_device.reset()
+									self.output_device.all(0)
+									break
 
 			sleep(0.1)
 
@@ -244,12 +254,14 @@ if __name__ == "__main__":
 	Oscilliscope =  processing()
 	testCircle = testCircle()
 	testAll = testAll()
+	fadeAll = fadeAll()
 
 	# Initiate threads for running translating from one deivce to another
 	HaroonThread = ThreadedMapper(Arduino,EntTec)
 	IrcamThread = ThreadedMapper(IRCAM,EntTec)
 	CircleThread = ThreadedMapper(testCircle,EntTec)
 	AllThread = ThreadedMapper(testAll,EntTec)
+	FadeThread = ThreadedMapper(fadeAll,EntTec)
 
 	# Setup GUI class
 	app = controlFrame(master)

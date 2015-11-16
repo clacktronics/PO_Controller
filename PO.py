@@ -24,65 +24,97 @@ class controlFrame(Frame):
 
 	def initUI(self):
 		"""Renders the GUI"""
-		buttonDims = {'width':20}
-		buttonDims.update(styleKwargs)
+		self.buttonDims = {'width':20}
+		self.buttonDims.update(styleKwargs)
 
-		self.ctrlFrame = Frame()
-		self.ctrlFrame.grid(row=0,column=0)
+		self.ctrlFrame = Frame(**styleKwargs)
+		spacerFrame = Frame()
+		spacerFrame.grid(row=0, column=1, padx=100)
+		self.testFrame = Frame(**styleKwargs)
+		self.cnctFrame = Frame(**styleKwargs)
+
+
+		self.drawControl()
+		self.drawTest()
 		self.drawConnect()
+
+	def drawControl(self):
 
 		Label(self.ctrlFrame, text="Cue", width=3, **styleKwargs).grid(row=0,column=0)
 		Label(self.ctrlFrame, text="255", width=3, **styleKwargs).grid(row=0,column=1)
 
 		Label(self.ctrlFrame, text="Haroon", **styleKwargs).grid(row=1, columnspan=2, column=0)
 
-		StartArduino = Button(self.ctrlFrame, text="Start Arduino",command=HaroonThread.start, **buttonDims)
+		StartArduino = Button(self.ctrlFrame, text="Start Arduino",command=HaroonThread.start, **self.buttonDims)
 		StartArduino.grid(row=2, columnspan=2, column=0)
 
-		KillArduino = Button(self.ctrlFrame, text="Kill Arduino",command=HaroonThread.stop, **buttonDims)
+		KillArduino = Button(self.ctrlFrame, text="Kill Arduino",command=HaroonThread.stop, **self.buttonDims)
 		KillArduino.grid(row=3, columnspan=2, column=0)
 
 		Label(self.ctrlFrame, text="Boulez", **styleKwargs).grid(row=4, columnspan=2, column=0)
 
-		StartIrcam = Button(self.ctrlFrame, text="Start IRCAM",command=IrcamThread.start, **buttonDims)
+		StartIrcam = Button(self.ctrlFrame, text="Start IRCAM",command=IrcamThread.start, **self.buttonDims)
 		StartIrcam.grid(row=5, columnspan=2, column=0)
-		KillIrcam = Button(self.ctrlFrame, text="Kill IRCAM",command=IrcamThread.stop, **buttonDims)
+		KillIrcam = Button(self.ctrlFrame, text="Kill IRCAM",command=IrcamThread.stop, **self.buttonDims)
 		KillIrcam.grid(row=6, columnspan=2, column=0)
 
-		Label(self.ctrlFrame, text="Test Patterns", **styleKwargs).grid(row=7, columnspan=2, column=0)
+		self.ctrlFrame.grid(row=0,column=0, padx=50)
 
-		Acending = Button(self.ctrlFrame, text="Start Acending",command=CircleThread.start, **buttonDims)
+	def drawTest(self):
+
+		Label(self.testFrame, text="Test Patterns", **styleKwargs).grid(row=7, columnspan=2, column=0)
+
+		Acending = Button(self.testFrame, text="Start Acending",command=CircleThread.start, **self.buttonDims)
 		Acending.grid(row=8, columnspan=2, column=0)
-		KillAcending = Button(self.ctrlFrame, text="Kill Acending",command=CircleThread.stop, **buttonDims)
+		KillAcending = Button(self.testFrame, text="Kill Acending",command=CircleThread.stop, **self.buttonDims)
 		KillAcending.grid(row=9, columnspan=2, column=0)
 
-		allon = Button(self.ctrlFrame, text="All on",command=AllThread.start, **buttonDims)
+		allon = Button(self.testFrame, text="All on",command=AllThread.start, **self.buttonDims)
 		allon.grid(row=10, columnspan=2, column=0)
-		alloff = Button(self.ctrlFrame, text="All off",command=AllThread.stop, **buttonDims)
+		alloff = Button(self.testFrame, text="All off",command=AllThread.stop, **self.buttonDims)
 		alloff.grid(row=11, columnspan=2, column=0)
 
-		fadeon = Button(self.ctrlFrame, text="Fade on",command=FadeThread.start, **buttonDims)
+		fadeon = Button(self.testFrame, text="Fade on",command=FadeThread.start, **self.buttonDims)
 		fadeon.grid(row=12, columnspan=2, column=0)
-		fadeoff = Button(self.ctrlFrame, text="Fade off",command=FadeThread.stop, **buttonDims)
+		fadeoff = Button(self.testFrame, text="Fade off",command=FadeThread.stop, **self.buttonDims)
 		fadeoff.grid(row=13, columnspan=2, column=0)
+
+		self.testFrame.grid(row=0,column=2, padx=50)
 
 
 	def drawConnect(self):
+
+		# Get ports (exclude bluetooth ports)
+		ports = [port for port in os.listdir('/dev/') if port[:4] == 'tty.' and port[:8] != 'tty.Blue' ]
+
+		ArduinoPort = ''
+		for port in ports:
+			if port[:12] == 'tty.usbmodem':
+				ArduinoPort = port
+
 		"""Connection status render"""
-		self.arduinoSelect = StringVar(self.ctrlFrame)
+		self.arduinoSelect = StringVar(self.cnctFrame)
 		self.arduinoSelect.set(ArduinoPort)
-		PortSelectOut = OptionMenu(self.ctrlFrame, self.arduinoSelect,*ports)
+		PortSelectOut = OptionMenu(self.cnctFrame, self.arduinoSelect,*ports)
 		PortSelectOut.grid(row=14, columnspan=2, column=0)
-		Label(self.ctrlFrame, text="Status: %s" % Arduino.isConnectedString() , **styleKwargs).grid(row=15, columnspan=2, column=0)
+		Label(self.cnctFrame, text="Status: %s" % Arduino.isConnectedString() , **styleKwargs).grid(row=15, columnspan=2, column=0)
 
-		self.EntSelect = StringVar(self.ctrlFrame)
+		self.EntSelect = StringVar(self.cnctFrame)
 		self.EntSelect.set('tty.usbserial-EN172718')
-		PortSelectOut = OptionMenu(self.ctrlFrame, self.EntSelect,*ports)
+		PortSelectOut = OptionMenu(self.cnctFrame, self.EntSelect,*ports)
 		PortSelectOut.grid(row=16, columnspan=2, column=0)
-		Label(self.ctrlFrame, text="Status: %s" % EntTec.isConnectedString() , **styleKwargs).grid(row=17, columnspan=2, column=0)
+		Label(self.cnctFrame, text="Status: %s" % EntTec.isConnectedString() , **styleKwargs).grid(row=17, columnspan=2, column=0)
 
-		connectButton = Button(self.ctrlFrame, text="Reload Connections", command=connectDevices)
+		#Label(self.cnctFrame, text="IP", **styleKwargs).grid(row=18, columnspan=1, column=0)
+		#IPadd = Entry(self.cnctFrame, width=5, **styleKwargs).grid(row=19, columnspan=2, column=0)
+		#Label(self.cnctFrame, text="Port", **styleKwargs).grid(row=20, columnspan=1, column=0)
+		#portadd = Entry(self.cnctFrame, width=4, **styleKwargs).grid(row=21, columnspan=2, column=0)
+
+
+		connectButton = Button(self.cnctFrame, text="Reload Connections", command=connectDevices, **styleKwargs)
 		connectButton.grid(row=30, columnspan=2, column=0)
+
+		self.cnctFrame.grid(row=1,column=2, padx=50)
 
 
 	def getEntPort(self):
@@ -110,7 +142,7 @@ class ThreadedMapper(threading.Thread):
 
 	def action(self):
 		"""Runs a loop within a thread, different action depending on input_device"""
-		print '%s thread initiated /n' % self.input_device
+		print '%s thread initiated' % self.input_device
 		while True:
 
 			if self.playThread:
@@ -217,13 +249,7 @@ class ThreadedMapper(threading.Thread):
 
 if __name__ == "__main__":
 
-	# Get ports (exclude bluetooth ports)
-	ports = [port for port in os.listdir('/dev/') if port[:4] == 'tty.' and port[:8] != 'tty.Blue' ]
 
-	ArduinoPort = ''
-	for port in ports:
-		if port[:12] == 'tty.usbmodem':
-			ArduinoPort = port
 
 
 
@@ -231,7 +257,7 @@ if __name__ == "__main__":
 	styleKwargs = {'background':'#E8E9E8','highlightbackground':'#E8E9E8'}
 	master = Tk()
 	master.configure(**styleKwargs)
-	master.minsize(width=1000,height=600)
+	master.minsize(width=500,height=400)
 	master.title('Paris Opera - Haroon Mirza')
 
 	def connectDevices():
@@ -268,18 +294,5 @@ if __name__ == "__main__":
 	app = controlFrame(master)
 	app.initUI()
 	connectDevices()
-
-
-
-
 	OperaPins = range(1,64,8)
-
-	# master.bind("<Button-1>", lightCan.lampSelect)
-
-	# Control buttons
-
-
-	#
-
-
 	master.mainloop()

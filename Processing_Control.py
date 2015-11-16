@@ -5,11 +5,11 @@ from time import sleep
 class processing(device):
 	""" Launches the Oscilliscope program """
 	def __init__(self):
-		self.dir = dir
-
-	def open(self,  dir):
+		pass
+	def open(self, dir):
 		cwd = os.getcwd()
-		directory = '--sketch=' + cwd + '/' + self.dir
+		print type(dir)
+		directory = '--sketch=' + cwd + '/' + dir
 		cmd = ['processing-java', directory, '--run']
 		print cmd
 		self.program = subprocess.Popen(cmd)
@@ -19,8 +19,8 @@ class processing(device):
 		print 'ended it'
 
 if __name__ == '__main__':
-	processing = processing('Oscilliscope')
-	processing.open()
+	processing = processing()
+	processing.open('Oscilliscope')
 	sleep(5)
 	print 'end!!'
 	processing.kill()

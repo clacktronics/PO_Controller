@@ -25,14 +25,14 @@ class IRCAM(device):
     if data[:12] == 'spat source ':
       value = data[17:]
       if value != None:
-        return abs(int(float(value)))
+        return {'spat':abs(int(float(value)))}
     if data[:5] == 'pitch':
       value = data[5:]
       if value != None:
-        return int(value)
-      #if data[:4] == 'cue ':
-      #  value = int(float(data[4:]))
-      #  return {'cue':{'cue':value}}
+        return {'pitch':int(value)}
+    if data[:4] == 'cue ':
+        value = int(float(data[4:]))
+        return {'cue':value}
 
 
   def allMessage(self):

@@ -26,6 +26,8 @@ class controlFrame(Frame):
 		"""Renders the GUI"""
 		self.buttonDims = {'width':20}
 		self.buttonDims.update(styleKwargs)
+		self.cueNumber = StringVar()
+		self.cueNumber.set('0')
 
 		self.ctrlFrame = Frame(**styleKwargs)
 		spacerFrame = Frame()
@@ -41,7 +43,7 @@ class controlFrame(Frame):
 	def drawControl(self):
 
 		Label(self.ctrlFrame, text="Cue", width=3, **styleKwargs).grid(row=0,column=0)
-		Label(self.ctrlFrame, text="255", width=3, **styleKwargs).grid(row=0,column=1)
+		Label(self.ctrlFrame, textvariable=self.cueNumber, width=3, **styleKwargs).grid(row=0,column=1)
 
 		Label(self.ctrlFrame, text="Haroon", **styleKwargs).grid(row=1, columnspan=2, column=0)
 
@@ -180,10 +182,16 @@ class ThreadedMapper(threading.Thread):
 					while True:
 						message = self.input_device.getMessage()
 						if message != None:
-							print message
-							message = map(message, 0, 360, 0, 64)
-							message = clamp(message, 0, 64)
-							messages[message] = 255
+							if message.get('spat', None) != None:
+								message = message['spat']
+								message = map(message, 0, 360, 0, 64)
+								message = clamp(message, 0, 64)
+								messages[message] = 255
+
+							elif message.get('cue', None) != None:
+								app.cueNumber.set(str(message['cue']))
+								print str(message['cue'])
+								app.drawControl()
 
 							for cN,channel in enumerate(messages):
 								if channel != 0:

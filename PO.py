@@ -159,14 +159,19 @@ class ThreadedMapper(threading.Thread):
 					# This loop waits for each step from the arduino then it passes the values to the DMX device
 					# It only ends when the user presses the button to set playThread False
 					while True:
-						ArduinoStep = [] # New empty list for the DMX send
-						output = self.input_device.readSequence() # this blocks until it can return a value
-						# string to list > this could be done more efficiently using list()?
-						for i in output:
-							ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
+						if self.input_device.isConnected() == False:
+							print "Arduino Not connected"
+							self.playThread = False
+						else:
+							ArduinoStep = [] # New empty list for the DMX send
+							output = self.input_device.readSequence() # this blocks until it can return a value
 
-						# Send list to DMX output
-						self.output_device.sendLights(ArduinoLights,ArduinoStep)
+							# string to list > this could be done more efficiently using list()?
+							for i in output:
+								ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
+
+								# Send list to DMX output
+								self.output_device.sendLights(ArduinoLights,ArduinoStep)
 
 						# Terminate when button sets playThread False, closes port
 						if not self.playThread:

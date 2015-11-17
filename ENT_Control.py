@@ -73,7 +73,7 @@ class EntTec(parLed, device):
 				#print "Attempt to send, no device connected"
 
 	def sendLights(self, lightsList, intensityList):
-		#print self.getLampChannels(lightsList),self.getIntensity(intensityList)
+		#print self.getIntensity(intensityList)
 		self.senddmx(self.getLampChannels(lightsList),self.getIntensity(intensityList))
 
 

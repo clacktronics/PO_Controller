@@ -153,9 +153,12 @@ class ThreadedMapper(threading.Thread):
 				if self.mode == 'Arduino':
 					print "Start Arduino"
 					self.input_device.cue() # Send a start command to the Arduino over serial
-					ArduinoLights = [59, 51, 43, 35, 25, 17, 9, 1] # Mapping of the 8 arduono lights
+					ArduinoLights = [56, 48, 40, 32, 24, 16, 8, 64] # Mapping of the 8 arduono lights
 					#ArduinoLights = [1, 2, 3, 4, 5, 6, 7, 8]
-					#ArduinoLights.reverse()
+					ArduinoLights.reverse()
+
+
+					print ArduinoLights
 					# This loop waits for each step from the arduino then it passes the values to the DMX device
 					# It only ends when the user presses the button to set playThread False
 					while True:
@@ -165,13 +168,11 @@ class ThreadedMapper(threading.Thread):
 						else:
 							ArduinoStep = [] # New empty list for the DMX send
 							output = self.input_device.readSequence() # this blocks until it can return a value
-
 							# string to list > this could be done more efficiently using list()?
 							for i in output:
 								ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
-
-								# Send list to DMX output
-								self.output_device.sendLights(ArduinoLights,ArduinoStep)
+							# Send list to DMX output
+							self.output_device.sendLights(ArduinoLights,ArduinoStep)
 
 						# Terminate when button sets playThread False, closes port
 						if not self.playThread:
@@ -182,25 +183,53 @@ class ThreadedMapper(threading.Thread):
 
 			# IRCAM Mode
 				elif self.mode == "IRCAM":
+					self.cue = 0
 					print "Listening to IRCAM"
-					messages = [0] * 64
+					messages = [0] * 65
+					self.output_device.sendLights(range(1,65),messages)
 					while True:
 						message = self.input_device.getMessage()
 						if message != None:
-							if message.get('spat', None) != None:
-								message = message['spat']
-								message = map(message, 0, 360, 0, 64)
-								message = clamp(message, 0, 64)
-								messages[message] = 255
-
-							elif message.get('cue', None) != None:
+							if message.get('cue', None) != None:
 								app.cueNumber.set(str(message['cue']))
-								print str(message['cue'])
+								self.cue = message['cue']
 								app.drawControl()
+
+							elif self.cue >= 22 and self.cue <= 31:
+								fade = 51
+								if message.get('spat', None) != None:
+									message = message['spat']
+									message = map(message, 0, 360, 0, 64)
+									message = clamp(message, 1, 64)
+									messages[message] = 255
+									print "spat %d " % message
+
+							elif self.cue >= 209:
+								fade = 15
+								if message.get('pitch', None) != None:
+									message = message['pitch']
+									message = clamp(message, 50, 100)
+									message = map(message, 50, 100, 0, 64)
+									messages[message] = 255
+									print "pitch %d " % message
+
+							else:
+								print "Ceiling off"
+								messages = [0] * 65
+								self.output_device.sendLights(range(1,65),messages)
 
 							for cN,channel in enumerate(messages):
 								if channel != 0:
-									messages[cN] -= 85
+									messages[cN] -= fade
+
+
+
+
+
+
+
+
+
 
 							self.output_device.sendLights(range(1,65),messages)
 							if not self.playThread:

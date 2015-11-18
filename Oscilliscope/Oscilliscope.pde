@@ -15,12 +15,13 @@ float lastx, lasty,pos2_float,pos2;
 int centerx, centery;
 String test;
 int[] spatialData = {0,0,0,0,0,0,0};
-int cuePos, lastCue = 0;
+int cuePos, lastCue, pitPos, lastPit = 0;
 boolean setDirection = true;
 float xModifier,yModifier;
 int trail = 140;
 float circleSize = 300;
 int line = 7;
+int lineColor = 255;
 
 void setup() {
   fullScreen(1);
@@ -51,7 +52,7 @@ void draw() {
   //println(spatialData);
 
   // draw the line
-  stroke(255);
+  stroke(lineColor);
   strokeWeight(line);
   if(!(lastx ==0 || lasty == 0 || xpos == 0 || ypos ==0 )){line(lastx, lasty, xpos, ypos);}
   lastx = xpos;
@@ -76,6 +77,8 @@ void receive(byte[] data, String HOST_IP, int PORT_RX) {
   //println(value);
   String spat[] = match(value, "spat source ([0-9]) az -([0-9]*)");
   String cue[] = match(value, "cue ([0-9]*)");
+  String pitch[] = match(value, "pitch ([0-9]*)");
+  
    if (spat != null) {
      int source1 = int(spat[1]);
      int val = int(spat[2]);
@@ -83,15 +86,20 @@ void receive(byte[] data, String HOST_IP, int PORT_RX) {
      spatialData[source1] = val;
    }
    
-   if (cue != null){
+   else if (cue != null){
      cuePos = int(cue[1]);
    }  
+   
+   else if (pitch != null){
+     pitPos = int(pitch[1]);
+   }  
+   
 }
 
 void dataGraph()
 {
-    textSize(32);
-  text(cuePos, 100, 30); 
+  textSize(32);
+  text(cuePos, 120, 30); 
   fill(0, 102, 153);
     int spacer = 0;
   for(int i = 1; i <= 6; i++)
@@ -103,6 +111,9 @@ void dataGraph()
     }
     spacer += 10;
   }
+  
+  line(90,10,90,10+pitPos);
+  
   
   
   
@@ -131,8 +142,11 @@ void rotationIncrementer(boolean direction){
   
 }
 
-void toggleDirection() {
-  if(lastCue != cuePos){ 
+void toggleDirection(int a) {
+  if (a == 1) {lastPit = pitPos;}
+  if(lastCue != cuePos || pitPos != lastPit){ 
          setDirection = !setDirection;
-         lastCue = cuePos; }   
+         lastCue = cuePos;
+         lastPit = pitPos;
+       }
 }

@@ -42,8 +42,7 @@ class controlFrame(Frame):
 
 	def drawControl(self):
 
-		Label(self.ctrlFrame, text="Cue", width=3, **styleKwargs).grid(row=0,column=0)
-		Label(self.ctrlFrame, textvariable=self.cueNumber, width=3, **styleKwargs).grid(row=0,column=1)
+		self.drawCue()
 
 		Label(self.ctrlFrame, text="Haroon", **styleKwargs).grid(row=1, columnspan=2, column=0)
 
@@ -61,6 +60,10 @@ class controlFrame(Frame):
 		KillIrcam.grid(row=6, columnspan=2, column=0)
 
 		self.ctrlFrame.grid(row=0,column=0, padx=50)
+
+	def drawCue(self):
+		Label(self.ctrlFrame, text="Cue", width=3, **styleKwargs).grid(row=0,column=0)
+		Label(self.ctrlFrame, textvariable=self.cueNumber, width=3, **styleKwargs).grid(row=0,column=1)
 
 	def drawTest(self):
 
@@ -152,13 +155,12 @@ class ThreadedMapper(threading.Thread):
 			# Arduino Mode
 				if self.mode == 'Arduino':
 					print "Start Arduino"
-					self.input_device.cue() # Send a start command to the Arduino over serial
 					ArduinoLights = [56, 48, 40, 32, 24, 16, 8, 64] # Mapping of the 8 arduono lights
 					#ArduinoLights = [1, 2, 3, 4, 5, 6, 7, 8]
 					ArduinoLights.reverse()
+					step = 0
+					self.input_device.cue() # Send a start command to the Arduino over serial
 
-
-					print ArduinoLights
 					# This loop waits for each step from the arduino then it passes the values to the DMX device
 					# It only ends when the user presses the button to set playThread False
 					while True:
@@ -168,6 +170,9 @@ class ThreadedMapper(threading.Thread):
 						else:
 							ArduinoStep = [] # New empty list for the DMX send
 							output = self.input_device.readSequence() # this blocks until it can return a value
+							step += 1
+							app.cueNumber.set(step)
+							#app.drawCue()
 							# string to list > this could be done more efficiently using list()?
 							for i in output:
 								ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
@@ -179,6 +184,7 @@ class ThreadedMapper(threading.Thread):
 							print "Stopping Arduino"
 							self.input_device.stop()
 							self.output_device.all(0)
+							app.cueNumber.set('0')
 							break
 
 			# IRCAM Mode
@@ -193,7 +199,6 @@ class ThreadedMapper(threading.Thread):
 							if message.get('cue', None) != None:
 								app.cueNumber.set(str(message['cue']))
 								self.cue = message['cue']
-								app.drawControl()
 
 							elif self.cue >= 22 and self.cue <= 31:
 								fade = 51
@@ -222,31 +227,31 @@ class ThreadedMapper(threading.Thread):
 								if channel != 0:
 									messages[cN] -= fade
 
-
-
-
-
-
-
-
-
-
 							self.output_device.sendLights(range(1,65),messages)
 							if not self.playThread:
 								print "Stopping IRCAM"
 								self.output_device.all(0)
+								app.cueNumber.set('0')
 								break
 
 			# testCircle Mode
 				elif self.mode == "testCircle":
 					while True:
 						output = self.input_device.circle()
-						self.output_device.sendLights(range(1,65),output)
+						if output == 1:
+							last_output = 64
+						else:
+							last_output = output - 1
+						self.output_device.sendLights([last_output, output],[0, 255])
+						app.cueNumber.set(str(output))
+
+
 
 						if not self.playThread:
 							print "Stopping Circle test"
 							self.input_device.reset()
 							self.output_device.all(0)
+							app.cueNumber.set('0')
 							break
 
 			# testAll Mode

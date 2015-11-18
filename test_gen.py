@@ -16,11 +16,10 @@ class testCircle(device):
             self.test_init = 1
         else:
             self.test_init += 1
-        print c
-        output = [0] * 65
-        output[c-1] = 255
-        print output
-        return output
+        #print c
+        #output = [0] * 65
+        #output[c-1] = 255
+        return c
 
     def reset(self):
         self.test_init = 1

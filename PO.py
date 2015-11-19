@@ -41,6 +41,7 @@ class controlFrame(Frame):
 		self.drawConnect()
 
 	def drawControl(self):
+		"Draw the control settings"
 
 		self.drawCue()
 
@@ -62,10 +63,13 @@ class controlFrame(Frame):
 		self.ctrlFrame.grid(row=0,column=0, padx=50)
 
 	def drawCue(self):
+		"Draw the cue settings"
+
 		Label(self.ctrlFrame, text="Cue", width=3, **styleKwargs).grid(row=0,column=0)
 		Label(self.ctrlFrame, textvariable=self.cueNumber, width=3, **styleKwargs).grid(row=0,column=1)
 
 	def drawTest(self):
+		"Draw the test settings"
 
 		Label(self.testFrame, text="Test Patterns", **styleKwargs).grid(row=7, columnspan=2, column=0)
 
@@ -88,6 +92,7 @@ class controlFrame(Frame):
 
 
 	def drawConnect(self):
+		"Draw the connect settings"
 
 		# Get ports (exclude bluetooth ports)
 		ports = [port for port in os.listdir('/dev/') if port[:4] == 'tty.' and port[:8] != 'tty.Blue' ]
@@ -220,6 +225,7 @@ class ThreadedMapper(threading.Thread):
 									message = message['pitch']
 									message = clamp(message, 50, 100)
 									message = map(message, 50, 100, 0, 64)
+									message = clamp(message, 1, 64)
 									messages[message] = 255
 									print "pitch %d " % message
 

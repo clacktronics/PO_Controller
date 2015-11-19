@@ -27,7 +27,7 @@ void setup() {
   fullScreen(2);
   //size(1080, 720);
   centerx = width/2;  
-  centery = height/2;
+  centery = height/2 -50;
   udp= new UDP(this, PORT_RX, HOST_IP);
   //udp.log(true);
   udp.listen(true);
@@ -99,8 +99,11 @@ void receive(byte[] data, String HOST_IP, int PORT_RX) {
 void dataGraph()
 {
   textSize(32);
+  fill(255, 255, 255);
   text(cuePos, 120, 30); 
-  fill(0, 102, 153);
+  if(cuePos >= 22 && cuePos <= 31 || cuePos >= 209) {fill(255, 255, 255);} else {fill(0, 0, 0);}
+  text("Celing Lights on", 120, 60); 
+  
     int spacer = 0;
   for(int i = 1; i <= 6; i++)
   {

@@ -49,14 +49,14 @@ class controlFrame(Frame):
 		StartArduino = Button(self.ctrlFrame, text="Start Arduino",command=HaroonThread.start, **self.buttonDims)
 		StartArduino.grid(row=2, columnspan=2, column=0)
 
-		KillArduino = Button(self.ctrlFrame, text="Kill Arduino",command=HaroonThread.stop, **self.buttonDims)
+		KillArduino = Button(self.ctrlFrame, text="Stop Arduino",command=HaroonThread.stop, **self.buttonDims)
 		KillArduino.grid(row=3, columnspan=2, column=0)
 
 		Label(self.ctrlFrame, text="Boulez", **styleKwargs).grid(row=4, columnspan=2, column=0)
 
 		StartIrcam = Button(self.ctrlFrame, text="Start IRCAM",command=IrcamThread.start, **self.buttonDims)
 		StartIrcam.grid(row=5, columnspan=2, column=0)
-		KillIrcam = Button(self.ctrlFrame, text="Kill IRCAM",command=IrcamThread.stop, **self.buttonDims)
+		KillIrcam = Button(self.ctrlFrame, text="Stop IRCAM",command=IrcamThread.stop, **self.buttonDims)
 		KillIrcam.grid(row=6, columnspan=2, column=0)
 
 		self.ctrlFrame.grid(row=0,column=0, padx=50)
@@ -71,7 +71,7 @@ class controlFrame(Frame):
 
 		Acending = Button(self.testFrame, text="Start Acending",command=CircleThread.start, **self.buttonDims)
 		Acending.grid(row=8, columnspan=2, column=0)
-		KillAcending = Button(self.testFrame, text="Kill Acending",command=CircleThread.stop, **self.buttonDims)
+		KillAcending = Button(self.testFrame, text="Stop Acending",command=CircleThread.stop, **self.buttonDims)
 		KillAcending.grid(row=9, columnspan=2, column=0)
 
 		allon = Button(self.testFrame, text="All on",command=AllThread.start, **self.buttonDims)
@@ -177,7 +177,12 @@ class ThreadedMapper(threading.Thread):
 							for i in output:
 								ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
 							# Send list to DMX output
-							self.output_device.sendLights(ArduinoLights,ArduinoStep)
+							if step > 465:
+								self.output_device.sendLights(ArduinoLights,ArduinoStep)
+							elif step == 465:
+								self.output_device.all(0)
+							else:
+								self.output_device.all(255)
 
 						# Terminate when button sets playThread False, closes port
 						if not self.playThread:
@@ -308,7 +313,7 @@ if __name__ == "__main__":
 	master.title('Paris Opera - Haroon Mirza')
 
 	def connectDevices():
-		
+
 		try: Arduino.disconnect()
 		except: pass
 		Arduino.connect('/dev/%s' % app.getArdPort(), 250000)

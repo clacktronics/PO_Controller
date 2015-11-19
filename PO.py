@@ -308,8 +308,7 @@ if __name__ == "__main__":
 	master.title('Paris Opera - Haroon Mirza')
 
 	def connectDevices():
-		#HaroonThread.__init__(Arduino,EntTec)
-		#IrcamThread.__init__(IRCAM,EntTec)
+		
 		try: Arduino.disconnect()
 		except: pass
 		Arduino.connect('/dev/%s' % app.getArdPort(), 250000)
@@ -318,7 +317,7 @@ if __name__ == "__main__":
 		except: pass
 		EntTec.connect('/dev/%s' % app.getEntPort()) #'/dev/tty.usbserial-EN172718'
 
-		IRCAM.connect('localhost',7007)
+		IRCAM.connect('0.0.0.0',7007)
 		app.drawConnect()
 
 	# Setup classes for the things the program controls

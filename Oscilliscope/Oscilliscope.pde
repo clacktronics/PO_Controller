@@ -24,7 +24,7 @@ int line = 7;
 int lineColor = 255;
 
 void setup() {
-  fullScreen(1);
+  fullScreen(2);
   //size(1080, 720);
   centerx = width/2;  
   centery = height/2;

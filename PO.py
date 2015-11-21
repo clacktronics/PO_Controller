@@ -40,24 +40,24 @@ class controlFrame(Frame):
 		self.drawTest()
 		self.drawConnect()
 
-	def drawControl(self):
+	def drawControl(self, arduino='#E8E9E8', ircam='#E8E9E8'):
 		"Draw the control settings"
 
 		self.drawCue()
 
 		Label(self.ctrlFrame, text="Haroon", **styleKwargs).grid(row=1, columnspan=2, column=0)
 
-		StartArduino = Button(self.ctrlFrame, text="Start Arduino",command=HaroonThread.start, **self.buttonDims)
+		StartArduino = Button(self.ctrlFrame, text="Start Arduino",command=startHaroon, width=20, highlightbackground=arduino)
 		StartArduino.grid(row=2, columnspan=2, column=0)
 
-		KillArduino = Button(self.ctrlFrame, text="Stop Arduino",command=HaroonThread.stop, **self.buttonDims)
+		KillArduino = Button(self.ctrlFrame, text="Stop Arduino",command=stopHaroon, **self.buttonDims)
 		KillArduino.grid(row=3, columnspan=2, column=0)
 
 		Label(self.ctrlFrame, text="Boulez", **styleKwargs).grid(row=4, columnspan=2, column=0)
 
-		StartIrcam = Button(self.ctrlFrame, text="Start IRCAM",command=IrcamThread.start, **self.buttonDims)
+		StartIrcam = Button(self.ctrlFrame, text="Start IRCAM",command=startIrcam, width=20, highlightbackground=ircam)
 		StartIrcam.grid(row=5, columnspan=2, column=0)
-		KillIrcam = Button(self.ctrlFrame, text="Stop IRCAM",command=IrcamThread.stop, **self.buttonDims)
+		KillIrcam = Button(self.ctrlFrame, text="Stop IRCAM",command=stopIrcam, **self.buttonDims)
 		KillIrcam.grid(row=6, columnspan=2, column=0)
 
 		self.ctrlFrame.grid(row=0,column=0, padx=50)
@@ -138,6 +138,27 @@ class controlFrame(Frame):
 # CONTROL CLASSES
 #===============================================================================
 
+def startHaroon():
+	IrcamThread.stop()
+	app.drawControl(arduino='#F00')
+	HaroonThread.start()
+
+def stopHaroon():
+	app.drawControl()
+	HaroonThread.stop()
+
+def startIrcam():
+	connectDevices()
+	HaroonThread.stop()
+	app.drawControl(ircam='#F00')
+	IrcamThread.start()
+
+def stopIrcam():
+	app.drawControl()
+	IrcamThread.stop()
+
+
+
 class ThreadedMapper(threading.Thread):
 
 	def __init__(self,input_device,output_device):
@@ -160,7 +181,7 @@ class ThreadedMapper(threading.Thread):
 			# Arduino Mode
 				if self.mode == 'Arduino':
 					print "Start Arduino"
-					ArduinoLights = [56, 48, 40, 32, 24, 16, 8, 64] # Mapping of the 8 arduono lights
+					ArduinoLights = [56, 48, 40, 32, 24, 16, 8, 1] # Mapping of the 8 arduono lights
 					#ArduinoLights = [1, 2, 3, 4, 5, 6, 7, 8]
 					ArduinoLights.reverse()
 					step = 0
@@ -177,7 +198,6 @@ class ThreadedMapper(threading.Thread):
 							output = self.input_device.readSequence() # this blocks until it can return a value
 							step += 1
 							app.cueNumber.set(step)
-							#app.drawCue()
 							# string to list > this could be done more efficiently using list()?
 							for i in output:
 								ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
@@ -188,6 +208,9 @@ class ThreadedMapper(threading.Thread):
 								self.output_device.all(0)
 							else:
 								self.output_device.all(255)
+							# Stop playing if end of sequence
+							if step >= 2131:
+								self.playThread = False
 
 						# Terminate when button sets playThread False, closes port
 						if not self.playThread:
@@ -210,7 +233,7 @@ class ThreadedMapper(threading.Thread):
 								app.cueNumber.set(str(message['cue']))
 								self.cue = message['cue']
 
-							elif self.cue >= 22 and self.cue <= 31:
+							if self.cue >= 22 and self.cue <= 31:
 								fade = 51
 								if message.get('spat', None) != None:
 									message = message['spat']
@@ -269,13 +292,12 @@ class ThreadedMapper(threading.Thread):
 				elif self.mode == "testAll":
 					while True:
 						if self.playThread:
-							output = self.input_device.all(True)
-							self.output_device.sendLights(range(1,65), output)
+							self.output_device.sendLights(range(1,65), [255]*64)
 						elif not self.playThread:
 							print 'stop'
-							output = self.input_device.all(False)
-							self.output_device.sendLights(range(1,65), output)
+							self.output_device.sendLights(range(1,65), [0]*64)
 							break
+						sleep(0.1)
 
 			# fadeAll Mode
 				elif self.mode == "fadeAll":

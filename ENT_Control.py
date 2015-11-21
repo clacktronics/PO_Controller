@@ -78,7 +78,8 @@ class EntTec(parLed, device):
 
 
 	def all(self,n):
-		self.senddmx(range(1,65),[n]*64)
+		self.sendLights(range(1,65), [n]*64)
+		#self.senddmx(range(1,65),[n]*64)
 		# Theeseeese are the LEDs for 8
 		#51,35,17,1
 	    #9,25,43,59

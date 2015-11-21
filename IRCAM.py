@@ -20,7 +20,7 @@ class IRCAM(device):
 
   def getMessage(self):
 
-    data, addr = self.sock.recvfrom(1024) # buffer size is 1024 bytes
+    data, addr = self.sock.recvfrom(64) # buffer size is 1024 bytes
     self.sock.sendto(data, ('localhost',7004))
     if data[:12] == 'spat source ':
       value = data[17:]

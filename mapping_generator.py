@@ -5,7 +5,7 @@ class parLed():
         self.numberOfLights = 64
         #
         self.lightColours = ['Red', 'Green', 'Blue', 'White', 'Zoom']
-        self.lightIntensityOn = [255, 105, 0, 255, 255]
+        self.lightIntensityOn = [0, 0, 0, 255, 255] #[255, 105, 0, 255, 255]
         self.lightIntensityOff = [0, 0, 0, 0, 255]
 
         # self.lightColours = ['Red']

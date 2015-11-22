@@ -181,7 +181,7 @@ class ThreadedMapper(threading.Thread):
 			# Arduino Mode
 				if self.mode == 'Arduino':
 					print "Start Arduino"
-					ArduinoLights = [56, 48, 40, 32, 24, 16, 8, 1] # Mapping of the 8 arduono lights
+					ArduinoLights = [57, 49, 41, 33, 25, 17, 9, 1] # Mapping of the 8 arduono lights
 					#ArduinoLights = [1, 2, 3, 4, 5, 6, 7, 8]
 					ArduinoLights.reverse()
 					step = 0
@@ -202,7 +202,7 @@ class ThreadedMapper(threading.Thread):
 							for i in output:
 								ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
 							# Send list to DMX output
-							if step > 465:
+							if step >= 0: # <=466
 								self.output_device.sendLights(ArduinoLights,ArduinoStep)
 							elif step == 465:
 								self.output_device.all(0)
@@ -247,7 +247,7 @@ class ThreadedMapper(threading.Thread):
 								if message.get('pitch', None) != None:
 									message = message['pitch']
 									message = clamp(message, 50, 100)
-									message = map(message, 50, 100, 0, 64)
+									message = map(message, 50, 100, 4, 64)
 									message = clamp(message, 1, 64)
 									messages[message] = 255
 									print "pitch %d " % message
@@ -350,7 +350,7 @@ if __name__ == "__main__":
 		except: pass
 		EntTec.connect('/dev/%s' % app.getEntPort()) #'/dev/tty.usbserial-EN172718'
 
-		IRCAM.connect('0.0.0.0',7007)
+		IRCAM.connect('0.0.0.0',7000)
 		app.drawConnect()
 
 	# Setup classes for the things the program controls

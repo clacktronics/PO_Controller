@@ -1,7 +1,7 @@
 void sequence() {
   
   if(cuePos == 0){
-    lineColor = 0;
+    lineColor = 255;
   }
   
   else if(cuePos < 22){

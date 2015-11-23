@@ -58,6 +58,5 @@ class fadeAll(device):
         elif self.test_init <= 0:
             self.direction = 1
         self.test_init += self.direction
-        print c
-        output = [c] * 65
+        output = c
         return output

@@ -37,7 +37,6 @@ class parLed():
         returnList = []
         for value in lampValues:
             for propN, prop in enumerate(self.lightIntensityOn):
-                #returnList.append(prop)
                 returnList.append(utils.map(value, 0, 255, self.lightIntensityOff[propN], prop))
         return returnList
 

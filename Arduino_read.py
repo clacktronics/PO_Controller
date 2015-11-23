@@ -1,4 +1,4 @@
-import serial
+import serial, sys
 from device import device
 
 class Arduino(device):
@@ -13,12 +13,12 @@ class Arduino(device):
 		try:
 			self.Arduino = serial.Serial(port, baud)
 			self.connected = True
-			print 'Yes Arduino'
+			sys.stdout.write('Yes Arduino\n')
 			return True
 		except:
 			self.Arduino = serial.Serial('/dev/tty')
 			self.connected = False
-			print 'No Arduino'
+			sys.stdout.write('No Arduino\n')
 			return False
 
 	def disconnect(self):
@@ -48,7 +48,7 @@ class Arduino(device):
 				except:
 					pass
 			else:
-				print "Attempt to send, no device connected"
+				sys.stdout.write("Attempt to send, no device connected\n")
 
 
 if __name__ == '__main__':

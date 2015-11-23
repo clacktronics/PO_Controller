@@ -14,6 +14,12 @@ from test_gen import testCircle, testAll, fadeAll
 from utils import map, clamp
 
 #===============================================================================
+# GLOBAL VARS
+#===============================================================================
+
+all64Lights = range(1,65)
+
+#===============================================================================
 # GUI CLASSES
 #===============================================================================
 
@@ -148,14 +154,16 @@ def stopHaroon():
 	HaroonThread.stop()
 
 def startIrcam():
-	connectDevices()
 	HaroonThread.stop()
+	IRCAM.disconnect()
+	IRCAM.connect('0.0.0.0',7000)
 	app.drawControl(ircam='#F00')
 	IrcamThread.start()
 
 def stopIrcam():
-	app.drawControl()
 	IrcamThread.stop()
+	app.drawControl()
+
 
 
 
@@ -173,14 +181,14 @@ class ThreadedMapper(threading.Thread):
 
 	def action(self):
 		"""Runs a loop within a thread, different action depending on input_device"""
-		print '%s thread initiated' % self.input_device
+		sys.stdout.write("%s thread initiated\n" % self.input_device)
 		while True:
 
 			if self.playThread:
 
 			# Arduino Mode
 				if self.mode == 'Arduino':
-					print "Start Arduino"
+					#print "Start Arduino"
 					ArduinoLights = [57, 49, 41, 33, 25, 17, 9, 1] # Mapping of the 8 arduono lights
 					#ArduinoLights = [1, 2, 3, 4, 5, 6, 7, 8]
 					ArduinoLights.reverse()
@@ -214,7 +222,7 @@ class ThreadedMapper(threading.Thread):
 
 						# Terminate when button sets playThread False, closes port
 						if not self.playThread:
-							print "Stopping Arduino"
+							# print "Stopping Arduino"
 							self.input_device.stop()
 							self.output_device.all(0)
 							app.cueNumber.set('0')
@@ -223,50 +231,66 @@ class ThreadedMapper(threading.Thread):
 			# IRCAM Mode
 				elif self.mode == "IRCAM":
 					self.cue = 0
-					print "Listening to IRCAM"
+					print "Listening for IRCAM"
 					messages = [0] * 65
-					self.output_device.sendLights(range(1,65),messages)
+					lastMessages = []
+					lastspat = None
+					lastpitch = None
+					self.output_device.sendLights(all64Lights,messages)
 					while True:
+
 						message = self.input_device.getMessage()
-						if message != None:
-							if message.get('cue', None) != None:
-								app.cueNumber.set(str(message['cue']))
-								self.cue = message['cue']
 
-							if self.cue >= 22 and self.cue <= 31:
-								fade = 51
-								if message.get('spat', None) != None:
-									message = message['spat']
-									message = map(message, 0, 360, 0, 64)
-									message = clamp(message, 1, 64)
-									messages[message] = 255
-									print "spat %d " % message
+						print message
 
-							elif self.cue >= 209:
-								fade = 15
-								if message.get('pitch', None) != None:
-									message = message['pitch']
-									message = clamp(message, 50, 100)
-									message = map(message, 50, 100, 4, 64)
-									message = clamp(message, 1, 64)
-									messages[message] = 255
-									print "pitch %d " % message
+						if message.get('cue', None) != None:
+							app.cueNumber.set(str(message['cue']))
+							self.cue = message['cue']
 
-							else:
-								print "Ceiling off"
-								messages = [0] * 65
-								self.output_device.sendLights(range(1,65),messages)
+						elif self.cue >= 22 and self.cue <= 31:
+							fade = 51
+							if message.get('spat', None) != None:
 
-							for cN,channel in enumerate(messages):
-								if channel != 0:
-									messages[cN] -= fade
+								message = message['spat']
+								lastspat = message
+								message = map(message, 0, 360, 0, 64)
+								message = clamp(message, 1, 64)
+								messages[message] = 255
+								#print "spat %d " % message
 
-							self.output_device.sendLights(range(1,65),messages)
-							if not self.playThread:
-								print "Stopping IRCAM"
-								self.output_device.all(0)
-								app.cueNumber.set('0')
-								break
+
+
+						elif self.cue >= 209:
+							fade = 15
+							if message.get('pitch', None) != None:
+
+								message = message['pitch']
+								message = clamp(message, 50, 100)
+								message = map(message, 50, 100, 4, 64)
+								#message = clamp(message, 1, 64)
+								messages[message] = 255
+								#print "pitch %d " % message
+
+						else:
+							#print "x"
+							self.output_device.all(0)
+
+
+						for cN,channel in enumerate(messages):
+							if channel != 0:
+								messages[cN] -= fade
+
+						if messages != lastMessages:
+							lastMessages = messages[:]
+							self.output_device.sendLights(all64Lights,messages)
+
+
+						if not self.playThread:
+							print "Stopping IRCAM"
+							self.output_device.all(0)
+							# self.input_device.disconnect()
+							app.cueNumber.set('0')
+							break
 
 			# testCircle Mode
 				elif self.mode == "testCircle":
@@ -283,19 +307,20 @@ class ThreadedMapper(threading.Thread):
 
 						if not self.playThread:
 							print "Stopping Circle test"
+							app.cueNumber.set('0')
 							self.input_device.reset()
 							self.output_device.all(0)
-							app.cueNumber.set('0')
+
 							break
 
 			# testAll Mode
 				elif self.mode == "testAll":
 					while True:
 						if self.playThread:
-							self.output_device.sendLights(range(1,65), [255]*64)
+							self.output_device.sendLights(all64Lights, [255]*64)
 						elif not self.playThread:
 							print 'stop'
-							self.output_device.sendLights(range(1,65), [0]*64)
+							self.output_device.sendLights(all64Lights, [0]*64)
 							break
 						sleep(0.1)
 
@@ -303,10 +328,12 @@ class ThreadedMapper(threading.Thread):
 				elif self.mode == "fadeAll":
 							while True:
 								output = self.input_device.fade()
-								self.output_device.sendLights(range(1,65),output)
+								app.cueNumber.set(str(output))
+								self.output_device.sendLights(all64Lights,[output]*64)
 
 								if not self.playThread:
 									print "Stopping fade test"
+									app.cueNumber.set('0')
 									self.input_device.reset()
 									self.output_device.all(0)
 									break
@@ -317,7 +344,6 @@ class ThreadedMapper(threading.Thread):
 		return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)
 
 	def start(self):
-		print 'start!'
 		self.playThread = True
 
 	def stop(self):
@@ -346,11 +372,11 @@ if __name__ == "__main__":
 		except: pass
 		Arduino.connect('/dev/%s' % app.getArdPort(), 250000)
 
-		try: EntTec.disconnect()
+		try:
+			EntTec.disconnect()
 		except: pass
 		EntTec.connect('/dev/%s' % app.getEntPort()) #'/dev/tty.usbserial-EN172718'
 
-		IRCAM.connect('0.0.0.0',7000)
 		app.drawConnect()
 
 	# Setup classes for the things the program controls

@@ -49,11 +49,11 @@ class EntTec(parLed, device):
 			self.SerialDevice.write( self.DMXOPEN+self.DMXINIT1+self.DMXCLOSE)
 			self.SerialDevice.write( self.DMXOPEN+self.DMXINIT2+self.DMXCLOSE)
 			self.connected = True
-			print "Yes Ent"
+			sys.stdout.write("Yes DMX out\n")
 			return True
 		except:
 			self.connected = False
-			print "No Ent"
+			sys.stdout.write("No DMX out\n")
 			return False
 
 	def disconnect(self):
@@ -64,7 +64,8 @@ class EntTec(parLed, device):
 
 	def senddmx(self, chans, intensity):
 		for chanN,chan in enumerate(chans):
-			self.dmxDataList[chan]=chr(intensity[chanN])
+			if chan <= 513 or chan >= 1:
+				self.dmxDataList[chan]=chr(intensity[chanN])
 			sdata=''.join(self.dmxDataList)
 		if self.isConnected():
 		    self.SerialDevice.write(self.DMXOPEN+self.DMXINTENSITY+sdata+self.DMXCLOSE)
@@ -80,9 +81,6 @@ class EntTec(parLed, device):
 	def all(self,n):
 		self.sendLights(range(1,65), [n]*64)
 		#self.senddmx(range(1,65),[n]*64)
-		# Theeseeese are the LEDs for 8
-		#51,35,17,1
-	    #9,25,43,59
 
 if __name__ == "__main__":
 	from utils import map, clamp
@@ -130,21 +128,15 @@ if __name__ == "__main__":
 				EntTec.senddmx(range(1,65),messages)
 	elif mode == "test":
 		while True:
-			# EntTec.senddmx([6,7,8,9,10,11,12,13,14,15], [255,255,255,255,255,255,255,255,255,255])
-			# sleep(1)
-			# EntTec.senddmx([6,7,8,9,10,11,12,13,14,15], [0,255,0,255,0,255,0,255,0,255])
-			# sleep(1)
-			EntTec.sendLights([2,3], [255,255])
-			sleep(.01)
-			EntTec.sendLights([2,3], [0,0])
-			sleep(.01)
+			IRCAM = IRCAM()
+			IRCAM.connect('0.0.0.0',7007)
 
 	elif mode == "test2":
 		while True:
 			EntTec.all(255)
-			sleep(.1)
+			sleep(.01)
 			EntTec.all(0)
-			sleep(.1)
+			sleep(.01)
 
 
 

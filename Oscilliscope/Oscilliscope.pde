@@ -59,7 +59,7 @@ void draw() {
   lasty = ypos;
   
   //inspect data graphically
-  //dataGraph();
+  dataGraph();
 
   // Works out rotation from radians
   pos2 = map(pos2_float, 0.00, 360.00, -100.00, 100.00);

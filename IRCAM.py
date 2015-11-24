@@ -33,14 +33,14 @@ class IRCAM(device):
 
     while True:
 
-        data = self.sock.recv(1024)         # buffer size is 1024 bytes
+        data = self.sock.recv(4069)         # buffer size is 1024 bytes
         self.sock.sendto(data, ('localhost',7004))  # Send data to local port where Processing sketch is listening
 
         if data[:12] == 'spat source ':
 
           value = data[17:]
           value = abs(int(float(value))) #numbers are negative so abs() is needed
-          print value, self.lastspat
+          #print value, self.lastspat
           if value != self.lastspat:
             self.lastspat = value
             return {'spat':value}

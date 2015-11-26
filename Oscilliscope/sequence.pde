@@ -42,7 +42,7 @@ void sequence() {
    }
       else if (cuePos < 48) {
       lineColor = 255;
-     circleSize = 400;
+     circleSize = 300;
    }
    else if (cuePos < 53) {
      lineColor = 255;
@@ -51,7 +51,7 @@ void sequence() {
      trail = 5;
      speed = 0.07;
      line = 3;  
-     if(lastCue != cuePos){ circleSize -= 100;lastCue = cuePos; }  
+     if(lastCue != cuePos){ circleSize -= 75;lastCue = cuePos; }  
    }
    
    else if (cuePos < 54) {
@@ -83,16 +83,24 @@ void sequence() {
      trail = 10;
      speed = 0.5;
    }
-   else if (cuePos < 90) {
+   else if (cuePos < 77) {
      lineColor = 0;
-     xModifier = map(spatialData[1],0,360,-10,10);
-     yModifier = map(spatialData[3],0,360,-10,10);
-     trail = 40;
+     circleSize = 0;
+     trail = 10;
      speed = 0.07;
      line = 7;  
      if(lastCue != cuePos){ circleSize -= 30;lastCue = cuePos; }  
    }
+   
+      else if (cuePos < 90) {
+     lineColor = 0;
+     trail = 200;
+     speed = 0.07;
+     line = 7;  
+     
+   }
    else if (cuePos < 96) {
+     circleSize = 150;
      lineColor = 255;
      xModifier = map(spatialData[2],0,360,0,200);
      yModifier = map(spatialData[2],0,360,0,150);

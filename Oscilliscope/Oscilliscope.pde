@@ -24,7 +24,7 @@ int line = 7;
 int lineColor = 255;
 
 int momentColor = 255;
-int momentx, momenty, momentAngle;
+int momentx, momenty, momentAngle, momentxmod;
 
 void setup() {
   fullScreen(2);
@@ -106,8 +106,8 @@ void lineMoment() {
   
   if(cuePos < 22) {
     momentColor = 0;
-    momentx =120;
-    momenty = 70;
+    momentx =0;
+    momenty = 0;
   }
   
     else if(cuePos < 23) {
@@ -118,8 +118,8 @@ void lineMoment() {
   
  else if(cuePos < 78) {
     momentColor = 0;
-    momentx = 120;
-    momenty = 70;
+    momentx = 0;
+    momenty = 0;
   }
   
   else if(cuePos < 86) {
@@ -128,19 +128,101 @@ void lineMoment() {
     momenty = height -20;
   }
   
-    else if(cuePos < 90) {
+    else if(cuePos < 92) {
     momentColor = 255;
     momentx = width -550;
     momenty = height -250;
     momentAngle = 60;
   }
   
- else if(cuePos < 200) {
+   
+  else if(cuePos < 186) {
     momentColor = 0;
+    momentx = 0;
+    momenty = 0;
+    momentAngle = 0;
+  }
+  
+ else if(cuePos < 189) {
+    momentColor = 255;
+    momentx = centerx;
+    momenty = centery;
+    momentAngle = -60;
+  }
+  
+   else if(cuePos < 191) {
+    momentColor = 0;
+  }
+  
+   else if(cuePos < 193) {
+    momentColor = 255;
+    momentx = width - 100;
+    momenty = 200;
+    momentAngle = 0;
+  }
+  
+     else if(cuePos < 197) {
+    momentColor = 0;
+  }
+  
+   else if(cuePos < 200) {
+    momentColor = 255;
+    momentx = centerx + 100;
+    momenty = centery;
+    momentAngle = -60;
+    momentxmod = -60;
+  }
+  
+   else if(cuePos < 201) {
+    momentColor = 255;
+    momentx = 120;
+    momenty = height - 100;
+    momentAngle = 0;
+    momentxmod = 0;
+  }
+  
+   else if(cuePos < 203) {
+    momentColor = 255;
+    momentx = 120;
+    momenty = height - 100 + 30;
+    momentAngle = 60;
+    momentxmod = 0;
+  }
+  
+   else if(cuePos < 206) {
+    momentColor = 255;
+    momentx = 120 + 30;
+    momenty = height - 100 + 30;
+    momentAngle = 60;
+    momentxmod = -60;
+  }
+  
+  else if(cuePos < 207) {
+    momentColor = 255;
+    momentx = 190;
+    momenty = height - 100 + 30;
+    momentAngle = 60;
+    momentxmod = -140;
+  }
+  
+    else if(cuePos < 208) {
+    momentColor = 255;
+    momentx = 120;
+    momenty = 70;
+    momentAngle = 0;
+    momentxmod = 0;
+  }
+  
+  else if(cuePos < 300) {
+    momentColor = 0;
+    momentx = 0;
+    momenty = 0;
+    momentAngle = 0;
+    momentxmod = 0;
   }
    
   stroke(momentColor);
-  line(momentx,momenty,momentx+60,momenty-momentAngle);
+  line(momentx,momenty,momentx+60+momentxmod,momenty-momentAngle);
 }
 
 void dataGraph()

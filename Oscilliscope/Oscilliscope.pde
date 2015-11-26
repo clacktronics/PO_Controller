@@ -24,7 +24,7 @@ int line = 7;
 int lineColor = 255;
 
 int momentColor = 255;
-int momentx, momenty;
+int momentx, momenty, momentAngle;
 
 void setup() {
   fullScreen(2);
@@ -122,21 +122,25 @@ void lineMoment() {
     momenty = 70;
   }
   
-  else if(cuePos < 90) {
+  else if(cuePos < 86) {
     momentColor = 255;
     momentx = width -300;
     momenty = height -20;
   }
   
+    else if(cuePos < 90) {
+    momentColor = 255;
+    momentx = width -550;
+    momenty = height -250;
+    momentAngle = 60;
+  }
+  
  else if(cuePos < 200) {
     momentColor = 0;
   }
-  
-  fill(momentColor);
-  textSize(32);
-  text('_', momentx, momenty); 
+   
   stroke(momentColor);
-  line(momentx,momenty,momentx+60,momenty);
+  line(momentx,momenty,momentx+60,momenty-momentAngle);
 }
 
 void dataGraph()

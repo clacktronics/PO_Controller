@@ -41,7 +41,7 @@ void sequence() {
      toggleDirection(1);  
    }
       else if (cuePos < 47) {
-        lineColor = 255;
+      lineColor = 255;
      circleSize = 400;
    }
    else if (cuePos < 53) {
@@ -83,7 +83,7 @@ void sequence() {
      trail = 10;
      speed = 0.5;
    }
-   else if (cuePos < 89) {
+   else if (cuePos < 90) {
      lineColor = 0;
      xModifier = map(spatialData[1],0,360,-10,10);
      yModifier = map(spatialData[3],0,360,-10,10);

@@ -23,9 +23,12 @@ float circleSize = 300;
 int line = 7;
 int lineColor = 255;
 
+int momentColor = 255;
+int momentx, momenty;
+
 void setup() {
-  fullScreen(2);
-  //size(1080, 720);
+  //fullScreen(2);
+  size(1080, 720);
   centerx = width/2;  
   centery = height/2 -50;
   udp= new UDP(this, PORT_RX, HOST_IP);
@@ -60,6 +63,9 @@ void draw() {
   
   //inspect data graphically
   dataGraph();
+  
+  // interlude line
+  lineMoment();
 
   // Works out rotation from radians
   pos2 = map(pos2_float, 0.00, 360.00, -100.00, 100.00);
@@ -94,6 +100,41 @@ void receive(byte[] data, String HOST_IP, int PORT_RX) {
      pitPos = int(pitch[1]);
    }  
    
+}
+
+void lineMoment() {
+  
+  if(cuePos < 22) {
+    momentColor = 0;
+    momentx =0;
+    momenty = 0;
+  }
+  
+    else if(cuePos < 23) {
+    momentColor = 255;
+    momentx = 120;
+    momenty = 70;
+  }
+  
+ else if(cuePos < 78) {
+    momentColor = 0;
+    momentx = 120;
+    momenty = 70;
+  }
+  
+  else if(cuePos < 90) {
+    momentColor = 255;
+    momentx = centerx +200;
+    momenty = height -20;
+  }
+  
+ else if(cuePos < 200) {
+    momentColor = 0;
+  }
+  
+  fill(momentColor);
+  textSize(32);
+  text('_', momentx, momenty); 
 }
 
 void dataGraph()

@@ -27,8 +27,8 @@ int momentColor = 255;
 int momentx, momenty;
 
 void setup() {
-  //fullScreen(2);
-  size(1080, 720);
+  fullScreen(2);
+  //size(1080, 720);
   centerx = width/2;  
   centery = height/2 -50;
   udp= new UDP(this, PORT_RX, HOST_IP);
@@ -106,8 +106,8 @@ void lineMoment() {
   
   if(cuePos < 22) {
     momentColor = 0;
-    momentx =0;
-    momenty = 0;
+    momentx =120;
+    momenty = 70;
   }
   
     else if(cuePos < 23) {
@@ -124,7 +124,7 @@ void lineMoment() {
   
   else if(cuePos < 90) {
     momentColor = 255;
-    momentx = centerx +200;
+    momentx = width -300;
     momenty = height -20;
   }
   
@@ -135,6 +135,8 @@ void lineMoment() {
   fill(momentColor);
   textSize(32);
   text('_', momentx, momenty); 
+  stroke(momentColor);
+  line(momentx,momenty,momentx+60,momenty);
 }
 
 void dataGraph()

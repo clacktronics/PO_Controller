@@ -1,5 +1,6 @@
 import socket, sys
 from device import device
+from time import sleep
 
 class IRCAM(device):
 
@@ -74,7 +75,8 @@ class IRCAM(device):
 if __name__ == '__main__':
 
   IRCAM = IRCAM()
-  IRCAM.connect('localhost',7000)
+  IRCAM.connect('0.0.0.0',7000)
   while True:
+    sleep(1)
     print IRCAM.getMessage()
     print IRCAM.allMessage()

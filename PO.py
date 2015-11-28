@@ -32,7 +32,7 @@ class controlFrame(Frame):
 		"""Renders the GUI"""
 		self.buttonDims = {'width':20}
 		self.buttonDims.update(styleKwargs)
-		self.cueNumber = StringVar()
+		self.cueNumber = IntVar()
 		self.cueNumber.set('0')
 
 		self.ctrlFrame = Frame(**styleKwargs)
@@ -63,8 +63,13 @@ class controlFrame(Frame):
 
 		StartIrcam = Button(self.ctrlFrame, text="Start IRCAM",command=startIrcam, width=20, highlightbackground=ircam)
 		StartIrcam.grid(row=5, columnspan=2, column=0)
-		KillIrcam = Button(self.ctrlFrame, text="Stop IRCAM",command=stopIrcam, **self.buttonDims)
-		KillIrcam.grid(row=6, columnspan=2, column=0)
+		Label(self.ctrlFrame, text="Make Network settings", **styleKwargs).grid(row=6, columnspan=2, column=0)
+		Label(self.ctrlFrame, text="IP Address 192.168.1.2", **styleKwargs).grid(row=7, columnspan=2, column=0)
+		Label(self.ctrlFrame, text="Will listen at port 7000", **styleKwargs).grid(row=8, columnspan=2, column=0)
+		Label(self.ctrlFrame, text=" ", **styleKwargs).grid(row=9, columnspan=2, column=0)
+		Label(self.ctrlFrame, text="Close and re-open program to restart IRCAM", **styleKwargs).grid(row=10, columnspan=2, column=0)
+		#KillIrcam = Button(self.ctrlFrame, text="Stop IRCAM",command=stopIrcam, **self.buttonDims)
+		#KillIrcam.grid(row=6, columnspan=2, column=0)
 
 		self.ctrlFrame.grid(row=0,column=0, padx=50)
 
@@ -244,7 +249,7 @@ class ThreadedMapper(threading.Thread):
 						print message
 
 						if message.get('cue', None) != None:
-							app.cueNumber.set(str(message['cue']))
+							#app.cueNumber.set(message['cue'])
 							self.cue = message['cue']
 
 						elif self.cue >= 22 and self.cue <= 31:
@@ -252,13 +257,9 @@ class ThreadedMapper(threading.Thread):
 							if message.get('spat', None) != None:
 
 								message = message['spat']
-								lastspat = message
 								message = map(message, 0, 360, 0, 64)
 								message = clamp(message, 1, 64)
 								messages[message] = 255
-								#print "spat %d " % message
-
-
 
 						elif self.cue >= 209:
 							fade = 15
@@ -272,7 +273,6 @@ class ThreadedMapper(threading.Thread):
 								#print "pitch %d " % message
 
 						else:
-							#print "x"
 							self.output_device.all(0)
 
 
@@ -283,7 +283,6 @@ class ThreadedMapper(threading.Thread):
 						if messages != lastMessages:
 							lastMessages = messages[:]
 							self.output_device.sendLights(all64Lights,messages)
-
 
 						if not self.playThread:
 							print "Stopping IRCAM"

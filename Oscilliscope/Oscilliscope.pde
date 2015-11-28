@@ -4,7 +4,7 @@ import hypermedia.net.*;
 //VideoExport videoExport;
 
 int PORT_RX=7004;
-String HOST_IP = "127.0.0.1";//IP Address of the PC in which this App is running
+String HOST_IP = "0.0.0.0";//127.0.0.1 IP Address of the PC in which this App is running
 UDP udp;//Create UDP object for recieving
 int position1, position2;
 float xpos = 250;
@@ -43,7 +43,6 @@ void setup() {
 }
 
 void draw() {
-  
   // trail dimmer
   fill(0, trail);
   strokeWeight(0);

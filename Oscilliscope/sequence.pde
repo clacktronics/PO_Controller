@@ -48,19 +48,20 @@ void sequence() {
      lineColor = 255;
      xModifier = map(spatialData[1],0,360,-10,10);
      yModifier = map(spatialData[3],0,360,-10,10);
-     trail = 5;
+     trail = 8;
      speed = 0.07;
      line = 3;  
      if(lastCue != cuePos){ circleSize -= 75;lastCue = cuePos; }  
    }
    
-   else if (cuePos < 54) {
+   else if (cuePos < 57) {
      lineColor = 0;
-     trail = 40;
+     trail = 8;
    }
-     
+   
+    
    else if (cuePos < 60) {
-     lineColor = 0;
+     lineColor = 255;
      xModifier = map(spatialData[2],0,360,0,100);
      yModifier = map(spatialData[2],0,360,0,100);
      trail = 20;

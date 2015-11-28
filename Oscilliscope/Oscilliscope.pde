@@ -61,7 +61,7 @@ void draw() {
   lasty = ypos;
   
   //inspect data graphically
-  dataGraph();
+  //dataGraph();
   
   // interlude line
   lineMoment();

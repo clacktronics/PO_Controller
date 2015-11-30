@@ -48,7 +48,7 @@ void sequence() {
      lineColor = 255;
      xModifier = map(spatialData[1],0,360,-10,10);
      yModifier = map(spatialData[3],0,360,-10,10);
-     trail = 8;
+     trail = 10;
      speed = 0.07;
      line = 3;  
      if(lastCue != cuePos){ circleSize -= 75;lastCue = cuePos; }  

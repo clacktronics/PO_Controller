@@ -111,7 +111,7 @@ void lineMoment() {
   
     else if(cuePos < 23) {
     momentColor = 255;
-    momentx = 120;
+    momentx = 320;
     momenty = 70;
   }
   
@@ -123,7 +123,7 @@ void lineMoment() {
   
   else if(cuePos < 86) {
     momentColor = 255;
-    momentx = width -300;
+    momentx = width -360;
     momenty = height -20;
   }
   
@@ -155,7 +155,7 @@ void lineMoment() {
   
    else if(cuePos < 193) {
     momentColor = 255;
-    momentx = width - 100;
+    momentx = width - 360;
     momenty = 200;
     momentAngle = 0;
   }
@@ -174,7 +174,7 @@ void lineMoment() {
   
    else if(cuePos < 201) {
     momentColor = 255;
-    momentx = 120;
+    momentx = 320;
     momenty = height - 100;
     momentAngle = 0;
     momentxmod = 0;
@@ -182,7 +182,7 @@ void lineMoment() {
   
    else if(cuePos < 203) {
     momentColor = 255;
-    momentx = 120;
+    momentx = 320;
     momenty = height - 100 + 30;
     momentAngle = 60;
     momentxmod = 0;
@@ -190,7 +190,7 @@ void lineMoment() {
   
    else if(cuePos < 206) {
     momentColor = 255;
-    momentx = 120 + 30;
+    momentx = 320 + 30;
     momenty = height - 100 + 30;
     momentAngle = 60;
     momentxmod = -60;
@@ -198,7 +198,7 @@ void lineMoment() {
   
   else if(cuePos < 207) {
     momentColor = 255;
-    momentx = 190;
+    momentx = 390;
     momenty = height - 100 + 30;
     momentAngle = 60;
     momentxmod = -140;
@@ -206,7 +206,7 @@ void lineMoment() {
   
     else if(cuePos < 208) {
     momentColor = 255;
-    momentx = 120;
+    momentx = 320;
     momenty = 70;
     momentAngle = 0;
     momentxmod = 0;

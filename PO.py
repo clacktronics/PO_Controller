@@ -49,7 +49,7 @@ class controlFrame(Frame):
 	def drawControl(self, arduino='#E8E9E8', ircam='#E8E9E8'):
 		"Draw the control settings"
 
-		self.drawCue()
+		#self.drawCue()
 
 		Label(self.ctrlFrame, text="Haroon", **styleKwargs).grid(row=1, columnspan=2, column=0)
 
@@ -210,7 +210,7 @@ class ThreadedMapper(threading.Thread):
 							ArduinoStep = [] # New empty list for the DMX send
 							output = self.input_device.readSequence() # this blocks until it can return a value
 							step += 1
-							app.cueNumber.set(step)
+							#app.cueNumber.set(step)
 							# string to list > this could be done more efficiently using list()?
 							for i in output:
 								ArduinoStep.append(self.rangeMapper(int(i), 0, 3, 0, 255))
@@ -230,7 +230,7 @@ class ThreadedMapper(threading.Thread):
 							# print "Stopping Arduino"
 							self.input_device.stop()
 							self.output_device.all(0)
-							app.cueNumber.set('0')
+							#app.cueNumber.set('0')
 							break
 
 			# IRCAM Mode
@@ -288,7 +288,7 @@ class ThreadedMapper(threading.Thread):
 							print "Stopping IRCAM"
 							self.output_device.all(0)
 							# self.input_device.disconnect()
-							app.cueNumber.set('0')
+							#app.cueNumber.set('0')
 							break
 
 			# testCircle Mode
@@ -300,13 +300,13 @@ class ThreadedMapper(threading.Thread):
 						else:
 							last_output = output - 1
 						self.output_device.sendLights([last_output, output],[0, 255])
-						app.cueNumber.set(str(output))
+						#app.cueNumber.set(str(output))
 
 
 
 						if not self.playThread:
 							print "Stopping Circle test"
-							app.cueNumber.set('0')
+							#app.cueNumber.set('0')
 							self.input_device.reset()
 							self.output_device.all(0)
 
@@ -327,12 +327,12 @@ class ThreadedMapper(threading.Thread):
 				elif self.mode == "fadeAll":
 							while True:
 								output = self.input_device.fade()
-								app.cueNumber.set(str(output))
+								#app.cueNumber.set(str(output))
 								self.output_device.sendLights(all64Lights,[output]*64)
 
 								if not self.playThread:
 									print "Stopping fade test"
-									app.cueNumber.set('0')
+									#app.cueNumber.set('0')
 									self.input_device.reset()
 									self.output_device.all(0)
 									break
